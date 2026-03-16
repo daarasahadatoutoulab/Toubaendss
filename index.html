@@ -824,69 +824,69 @@ function loadLocal() {
 }
 
 // ══════════════════════════════════════════════
-// SAUVEGARDE — photos incluses, en morceaux
-// Les grandes photos (>300KB) restent en local
+// SAUVEGARDE — photos dans table séparée Supabase
 // ══════════════════════════════════════════════
-const MAX_PHOTO = 300000; // 300KB max par photo vers Supabase
 
-function dbPourSupabase() {
-  // Préparer les données : remplacer les grandes photos par un marqueur
-  const photosLocales = {};
-  const membres = db.members.map(m => {
-    if (m.photo && m.photo.length > MAX_PHOTO) {
-      photosLocales['m_' + m.id] = m.photo;
-      return { ...m, photo: '__local__' };
-    }
-    return { ...m };
-  });
-  const pending = db.pending.map(p => {
-    if (p.photo && p.photo.length > MAX_PHOTO) {
-      photosLocales['p_' + p._pid] = p.photo;
-      return { ...p, photo: '__local__' };
-    }
-    return { ...p };
-  });
-  // Stocker les grandes photos séparément en local
-  try { localStorage.setItem(SB_LOCAL_KEY + '_photos', JSON.stringify(photosLocales)); } catch(e) {}
-  return { ...db, members: membres, pending: pending };
+// Sauvegarder UNE photo dans daara_photos
+async function savePhoto(id, photoBase64) {
+  if (!photoBase64) return;
+  try {
+    await sbUpsert('daara_photos', [{ id: String(id), photo: photoBase64, updated_at: new Date().toISOString() }]);
+  } catch(e) {}
 }
 
-function restaurerPhotos() {
+// Charger TOUTES les photos depuis daara_photos et les injecter dans db
+async function chargerPhotos() {
   try {
-    const raw = localStorage.getItem(SB_LOCAL_KEY + '_photos');
-    if (!raw) return;
-    const photos = JSON.parse(raw);
-    db.members = db.members.map(m =>
-      m.photo === '__local__' && photos['m_' + m.id] ? { ...m, photo: photos['m_' + m.id] } : m
-    );
-    db.pending = db.pending.map(p =>
-      p.photo === '__local__' && photos['p_' + p._pid] ? { ...p, photo: photos['p_' + p._pid] } : p
-    );
+    const rows = await sbGet('daara_photos');
+    if (!rows || rows.length === 0) return;
+    const map = {};
+    rows.forEach(r => { if (r.id && r.photo) map[r.id] = r.photo; });
+    // Injecter dans membres
+    db.members = db.members.map(m => {
+      const p = map['m_' + m.id];
+      return p ? { ...m, photo: p } : m;
+    });
+    // Injecter dans pending
+    db.pending = db.pending.map(p => {
+      const ph = map['p_' + p._pid];
+      return ph ? { ...p, photo: ph } : p;
+    });
   } catch(e) {}
+}
+
+// Préparer les données SANS photos pour daara_db (données légères)
+function dbPourSupabase() {
+  const membres  = db.members.map(m  => ({ ...m,  photo: undefined }));
+  const pending  = db.pending.map(p  => ({ ...p,  photo: undefined }));
+  return { ...db, members: membres, pending: pending };
 }
 
 // ── Sauvegarder vers Supabase + local
 async function saveDB() {
-  // 1. Sauvegarde locale immédiate (toujours réussit)
+  // 1. Sauvegarde locale immédiate
   saveLocal();
-  // 2. Envoi vers Supabase (peut échouer si réseau indisponible)
+  // 2. Sauvegarder les données (sans photos) dans daara_db
   try {
     const dataStr = JSON.stringify(dbPourSupabase());
-    // Découper en morceaux de 800KB si nécessaire
     const CHUNK = 800000;
     const chunks = [];
     for (let i = 0; i < dataStr.length; i += CHUNK) chunks.push(dataStr.slice(i, i + CHUNK));
     const ts = new Date().toISOString();
     await sbUpsert('daara_db', chunks.map((c, i) => ({ id: i + 1, data: c, updated_at: ts })));
-    // Supprimer les anciens morceaux en surplus
     const old = parseInt(localStorage.getItem(SB_LOCAL_KEY + '_chunks') || '0');
     for (let i = chunks.length + 1; i <= old; i++) {
       await sbDelete('daara_db', 'id', i).catch(() => {});
     }
     localStorage.setItem(SB_LOCAL_KEY + '_chunks', String(chunks.length));
-  } catch(e) {
-    // Pas de console.warn ici pour éviter le spam — les données sont sauvées en local
-  }
+  } catch(e) {}
+  // 3. Sauvegarder les photos dans daara_photos séparément
+  try {
+    const photosAEnvoyer = [];
+    db.members.forEach(m  => { if (m.photo)  photosAEnvoyer.push({ id: 'm_' + m.id,   photo: m.photo,  updated_at: new Date().toISOString() }); });
+    db.pending.forEach(p  => { if (p.photo)  photosAEnvoyer.push({ id: 'p_' + p._pid, photo: p.photo,  updated_at: new Date().toISOString() }); });
+    if (photosAEnvoyer.length > 0) await sbUpsert('daara_photos', photosAEnvoyer);
+  } catch(e) {}
 }
 
 // ── Charger depuis Supabase, sinon depuis local
@@ -903,8 +903,8 @@ async function loadDB() {
         if (Array.isArray(parsed.cotisations) && parsed.cotisations.length) db.cotisations = parsed.cotisations;
         if (Array.isArray(parsed.eventCotisations)) db.eventCotisations = parsed.eventCotisations;
         if (Array.isArray(parsed.events) && parsed.events.length) db.events = parsed.events;
-        restaurerPhotos();
-        // Mettre à jour le backup local avec les données Supabase
+        // Charger les photos depuis la table séparée
+        await chargerPhotos();
         saveLocal();
         showToast('✅ Données chargées', 'success');
         renderAfterLoad();
@@ -1112,12 +1112,26 @@ function previewPhoto(input) {
   if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    photoData = e.target.result;
-    document.getElementById('photo-preview').src = photoData;
-    document.getElementById('photo-preview').style.display = 'block';
-    document.getElementById('photo-placeholder').style.display = 'none';
-    document.getElementById('photo-label').textContent = '✓ Photo ajoutée';
-    document.getElementById('photo-label').style.color = 'var(--teal)';
+    // Compresser la photo avec un canvas pour qu'elle reste petite (<200KB)
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_SIZE = 300; // max 300px de large ou haut
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
+      else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // Qualité 0.75 → photo légère et claire
+      photoData = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('photo-preview').src = photoData;
+      document.getElementById('photo-preview').style.display = 'block';
+      document.getElementById('photo-placeholder').style.display = 'none';
+      document.getElementById('photo-label').textContent = '✓ Photo ajoutée';
+      document.getElementById('photo-label').style.color = 'var(--teal)';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -1195,6 +1209,8 @@ function submitInscription() {
   const newEntry = { _pid: Date.now(), prenom, nom, telephone: telNorm, section, photo: photoData };
   db.pending.push(newEntry);
   saveDB();
+  // Sauvegarder la photo séparément dans daara_photos
+  if (photoData) savePhoto("p_" + newEntry._pid, photoData);
   // Sync vers Google Sheets
   syncToSheets({ _pid: newEntry._pid, prenom, nom, telephone: telNorm, section }, 'pending');
 
@@ -1273,24 +1289,7 @@ function approve(pid) {
   if(!p) return;
   const newId = Date.now();
   const dateInscription = new Date().toISOString().slice(0,10);
-
-  // Récupérer la vraie photo si elle est stockée en local (marqueur '__local__')
-  let photoFinale = p.photo;
-  if (photoFinale === '__local__') {
-    try {
-      const raw = localStorage.getItem(SB_LOCAL_KEY + '_photos');
-      if (raw) {
-        const photos = JSON.parse(raw);
-        if (photos['p_' + p._pid]) {
-          photoFinale = photos['p_' + p._pid];
-          // Sauvegarder avec le nouvel ID membre pour les prochains rechargements
-          photos['m_' + newId] = photoFinale;
-          delete photos['p_' + p._pid];
-          localStorage.setItem(SB_LOCAL_KEY + '_photos', JSON.stringify(photos));
-        }
-      }
-    } catch(e) {}
-  }
+  const photoFinale = p.photo || null;
 
   db.members.push({...p, id:newId, statut:'actif', dateInscription, role:'Membre', fraisCarte:'impayé', photo: photoFinale});
   db.cotisations.push(...genCotisations(newId, dateInscription));
@@ -1298,6 +1297,8 @@ function approve(pid) {
   db.eventCotisations.push(...genEventCotisations(newId));
   db.pending = db.pending.filter(x=>x._pid!==pid);
   saveDB();
+  // Sauvegarder photo avec le nouvel ID membre dans daara_photos
+  if (photoFinale) savePhoto("m_" + newId, photoFinale);
   // Sync vers Google Sheets
   syncToSheets({ id:newId, prenom:p.prenom, nom:p.nom, telephone:p.telephone, section:p.section, role:'Membre', statut:'actif', dateInscription, fraisCarte:'impayé' }, 'member');
   showToast(`✓ ${p.prenom} ${p.nom} accepté(e) comme membre`, 'success');
