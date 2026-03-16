@@ -4,16 +4,29 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DAA'RA SAHADATOU TOULAB TOUBA ENDSS</title>
+  <meta name="theme-color" content="#080a0f"/>
+  <meta name="description" content="DAA'RA SAHADATOU TOULAB TOUBA ENDSS — Gestion des membres"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#0b0c10;--surface:#13151c;--s2:#1a1d27;--border:#252836;
-      --gold:#d4a843;--gold2:#f0c96a;--teal:#3dbfa0;--text:#edeae2;
-      --muted:#6b6b80;--green:#3dbf82;--red:#e05c5c;--blue:#5c8de0;--r:14px;
+      --bg:#080a0f;--surface:#0f1219;--s2:#161b26;--border:#1e2535;
+      --gold:#c9973a;--gold2:#e8b84b;--gold3:#f5d078;--teal:#2bb896;
+      --text:#e8e3d8;--muted:#5a6070;--green:#2daa72;--red:#d94f4f;
+      --blue:#4a7cc9;--r:16px;--r-sm:10px;
+      --shadow-sm:0 2px 12px rgba(0,0,0,.4);
+      --shadow-md:0 8px 32px rgba(0,0,0,.5);
+      --shadow-lg:0 20px 60px rgba(0,0,0,.65);
+      --glow-gold:0 0 24px rgba(201,151,58,.2);
+      --glow-teal:0 0 24px rgba(43,184,150,.15);
     }
-    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;
+      background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(201,151,58,.07),transparent),
+                       radial-gradient(ellipse 60% 40% at 80% 80%,rgba(43,184,150,.04),transparent);
+    }
     input,select,textarea{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:9px;font-family:inherit;font-size:15px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
     input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,67,.12)}
     select option{background:var(--s2)}
@@ -49,7 +62,7 @@
 
     /* ── Buttons */
     .btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:9px;font-weight:600;font-family:inherit;font-size:15px;padding:13px 22px;width:100%;cursor:pointer;transition:all .2s ease}
-    .btn-primary{background:linear-gradient(135deg,#d4a843,#f0c96a);color:#0b0c10}
+    .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#080a0f;box-shadow:0 4px 16px rgba(201,151,58,.25)}
     .btn-primary:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,168,67,.3)}
     .btn-primary:active{transform:translateY(0);box-shadow:none}
     .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
@@ -79,40 +92,46 @@
 
     /* ── Admin */
     .admin-wrap{display:flex;min-height:100vh}
-    .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
-    .sidebar-logo{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-    .sidebar-logo img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #3dbfa066}
-    .sidebar-nav{padding:10px 8px;flex:1}
-    .nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:400;cursor:pointer;text-align:left;margin-bottom:3px;transition:all .15s;position:relative}
-    .nav-btn.active{background:#d4a84318;color:var(--gold);font-weight:600}
-    .nav-btn svg{flex-shrink:0}
-    .badge-nav{background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;margin-left:auto}
-    .badge-nav.teal{background:var(--teal);color:#0b0c10}
-    .admin-content{margin-left:240px;flex:1;padding:28px 32px;min-height:100vh}
+    .sidebar{width:248px;background:linear-gradient(180deg,var(--surface) 0%,rgba(8,10,15,.98) 100%);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;box-shadow:4px 0 24px rgba(0,0,0,.3)}
+    .sidebar-logo{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+    .sidebar-logo img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid;border-image:linear-gradient(135deg,var(--gold),var(--teal)) 1;box-shadow:0 0 16px rgba(201,151,58,.3)}
+    .sidebar-nav{padding:12px 10px;flex:1}
+    .nav-btn{width:100%;display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:10px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:400;cursor:pointer;text-align:left;margin-bottom:2px;transition:all .2s;position:relative}
+    .nav-btn:hover{background:rgba(255,255,255,.04);color:var(--text)}
+    .nav-btn.active{background:linear-gradient(135deg,rgba(201,151,58,.15),rgba(201,151,58,.05));color:var(--gold);font-weight:600;border:1px solid rgba(201,151,58,.15)}
+    .nav-btn svg{flex-shrink:0;opacity:.7}
+    .nav-btn.active svg{opacity:1}
+    .badge-nav{background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:auto;box-shadow:0 2px 8px rgba(217,79,79,.4)}
+    .badge-nav.teal{background:var(--teal);color:#0b0c10;box-shadow:0 2px 8px rgba(43,184,150,.4)}
+    .admin-content{margin-left:248px;flex:1;padding:32px 36px;min-height:100vh}
     .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
     .page-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--gold)}
     .page-sub{color:var(--muted);font-size:13px;margin-top:2px}
-    .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
-    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
-    .stat-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-    .stat-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+    .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin-bottom:24px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--stat-accent,linear-gradient(90deg,var(--gold),var(--gold2)));border-radius:var(--r) var(--r) 0 0}
+    .stat-card::after{content:'';position:absolute;bottom:-20px;right:-10px;width:80px;height:80px;border-radius:50%;background:var(--stat-glow,rgba(201,151,58,.06));pointer-events:none}
+    .stat-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .stat-val{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1;letter-spacing:-.5px}
+    .stat-trend{font-size:11px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:4px}
     .member-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
     .member-row:last-child{border-bottom:none}
     .avatar{border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700}
     .action-row{display:flex;gap:8px}
     .btn-sm{padding:7px 14px;font-size:13px;border-radius:8px;border:none;font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-    .btn-accept{background:#3dbfa018;color:var(--teal);border:1px solid #3dbfa044;transition:all .2s}
-    .btn-accept:hover{background:#3dbfa0;color:#0b0c10;transform:translateY(-1px);box-shadow:0 4px 12px rgba(61,191,160,.3)}
-    .btn-refuse{background:#e05c5c18;color:var(--red);border:1px solid #e05c5c33;transition:all .2s}
-    .btn-refuse:hover{background:var(--red);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(224,92,92,.3)}
+    .btn-accept{background:rgba(43,184,150,.1);color:var(--teal);border:1px solid rgba(43,184,150,.25);transition:all .2s;backdrop-filter:blur(4px)}
+    .btn-accept:hover{background:var(--teal);color:#080a0f;transform:translateY(-1px);box-shadow:0 6px 18px rgba(43,184,150,.35),0 0 0 3px rgba(43,184,150,.1)}
+    .btn-refuse{background:rgba(217,79,79,.1);color:var(--red);border:1px solid rgba(217,79,79,.25);transition:all .2s}
+    .btn-refuse:hover{background:var(--red);color:#fff;transform:translateY(-1px);box-shadow:0 6px 18px rgba(217,79,79,.35)}
     .btn-pay{background:#d4a84318;color:var(--gold);border:1px solid #d4a84344;padding:5px 12px;font-size:12px;border-radius:7px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s}
     .btn-pay:hover{background:var(--gold);color:#0b0c10;transform:translateY(-1px)}
     .cot-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--s2);border-radius:8px;margin-bottom:6px}
     .empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-    .hero-banner{background:linear-gradient(135deg,#0d1a0e,#13151c,#0c1614);border:1px solid #3dbfa033;border-radius:var(--r);padding:22px 28px;margin-bottom:22px;display:flex;align-items:center;gap:22px;position:relative;overflow:hidden}
-    .hero-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:#3dbfa0;opacity:.04}
-    .logout-btn{background:transparent;border:none;color:var(--red);font-size:13px;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;cursor:pointer;font-family:inherit;width:100%;margin-top:auto}
-    .logout-btn:hover{background:#e05c5c18}
+    .hero-banner{background:linear-gradient(135deg,#0a1510 0%,#0f1a20 40%,#0a1210 100%);border:1px solid rgba(43,184,150,.2);border-radius:var(--r);padding:28px 32px;margin-bottom:28px;display:flex;align-items:center;gap:26px;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(43,184,150,.1)}
+    .hero-banner::before{content:'';position:absolute;top:-80px;right:-40px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(43,184,150,.08),transparent 70%)}
+    .hero-banner::after{content:'';position:absolute;bottom:-60px;left:20%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,151,58,.05),transparent 70%)}
+    .logout-btn{background:rgba(217,79,79,.07);border:1px solid rgba(217,79,79,.15);color:var(--red);font-size:13px;display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;cursor:pointer;font-family:inherit;width:calc(100% - 20px);margin:0 10px 10px;font-weight:500;transition:all .2s}
+    .logout-btn:hover{background:rgba(217,79,79,.15);border-color:rgba(217,79,79,.3);transform:none}
     .cotisation-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px}
     .member-header-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
 
@@ -164,7 +183,7 @@
       .admin-wrap{flex-direction:column}
       .grid4{grid-template-columns:1fr 1fr}
       .row{flex-direction:column;gap:0}
-      .logout-btn{display:none}
+      .logout-btn{display:flex}
     }
 
     /* ── Search */
@@ -176,19 +195,30 @@
     .progress-bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:6px}
     .progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--teal),var(--green));transition:width .5s ease}
 
-    /* ── Toast notification */
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 24px;font-size:14px;font-weight:600;color:var(--text);box-shadow:0 12px 40px rgba(0,0,0,.7),0 2px 8px rgba(0,0,0,.4);z-index:500;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-    .toast.success{border-color:#3dbfa055;color:var(--teal);background:#13151c}
-    .toast.error{border-color:#e05c5c55;color:var(--red);background:#13151c}
+    /* toast v2 ci-dessous */
 
-    /* ── Stat card hover */
-    .stat-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
     .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.35);border-color:#35394a}
 
+    /* ── Input error state */
+    input.input-error,select.input-error{border-color:var(--red) !important;box-shadow:0 0 0 3px rgba(217,79,79,.12) !important;animation:shake .3s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+    /* ── Loading spinner */
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Badge statut améliorés */
+    .badge-actif{background:rgba(45,170,114,.12);color:var(--green);border:1px solid rgba(45,170,114,.25);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;letter-spacing:.05em}
+    .badge-inactif{background:rgba(217,79,79,.12);color:var(--red);border:1px solid rgba(217,79,79,.25);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700}
+
+    /* ── Skeleton loader */
+    .skeleton{background:linear-gradient(90deg,var(--s2) 25%,var(--border) 50%,var(--s2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:16px}
+
     /* ── Member card hover */
-    .card{transition:box-shadow .2s ease,border-color .2s ease}
-    .card:hover{border-color:#2e3244}
+    .card{transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease}
+    .card:hover{border-color:rgba(201,151,58,.2);box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 0 1px rgba(201,151,58,.08)}
+    .member-card{background:linear-gradient(145deg,var(--surface),rgba(22,27,38,.8)) !important;border:1px solid var(--border) !important}
+    .member-card:hover{border-color:rgba(201,151,58,.25) !important;transform:translateY(-2px) !important}
 
     /* ── Smooth page transitions */
     .page.active{animation:fadeIn .3s ease both}
@@ -197,7 +227,53 @@
     .fi{animation:fadeIn .35s cubic-bezier(.22,.68,0,1.2) both}
 
     /* ── Nav active indicator amélioré */
-    .nav-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0}
+    .nav-btn.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:65%;background:linear-gradient(180deg,var(--gold),var(--teal));border-radius:0 3px 3px 0;box-shadow:0 0 8px rgba(201,151,58,.5)}
+
+    /* ── Dashboard chart container */
+    .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:22px;position:relative}
+    .chart-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:var(--r) var(--r) 0 0;opacity:.5}
+    .chart-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:4px}
+    .chart-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+    @media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+
+    /* ── Page title amélioré */
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;color:var(--gold);letter-spacing:-.3px}
+    .page-sub{color:var(--muted);font-size:13px;margin-top:3px}
+    .admin-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px}
+
+    /* ── Inputs améliorés */
+    input,select,textarea{background:rgba(22,27,38,.8);border:1px solid var(--border);color:var(--text);padding:11px 15px;border-radius:var(--r-sm);font-family:inherit;font-size:14px;width:100%;outline:none;transition:border-color .25s,box-shadow .25s,background .25s;-webkit-appearance:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,58,.1),0 2px 12px rgba(0,0,0,.3);background:rgba(22,27,38,1)}
+    
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,151,58,.4),0 0 0 2px rgba(201,151,58,.2)}
+
+    /* ── Toast amélioré */
+    .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(120px);background:rgba(15,18,25,.95);border:1px solid var(--border);border-radius:16px;padding:14px 28px;font-size:14px;font-weight:500;color:var(--text);box-shadow:0 16px 48px rgba(0,0,0,.7),0 4px 12px rgba(0,0,0,.4);z-index:9999;opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;backdrop-filter:blur(12px)}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.success{border-color:rgba(43,184,150,.4);color:var(--teal)}
+    .toast.error{border-color:rgba(217,79,79,.4);color:var(--red)}
+    .toast.info{border-color:rgba(74,124,201,.4);color:var(--blue)}
+    .toast.warn{border-color:rgba(201,151,58,.4);color:var(--gold)}
+
+    /* ── Scrollbar premium */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--gold),var(--teal));border-radius:4px;opacity:.5}
+
+    /* ── Section labels */
+    .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-left:2px;display:flex;align-items:center;gap:8px}
+    .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+    /* ── Glow effects sur stats */
+    .stat-gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2)) !important}
+    .stat-gold::after{background:radial-gradient(circle,rgba(201,151,58,.08),transparent) !important}
+    .stat-teal::before{background:linear-gradient(90deg,var(--teal),#2daa72) !important}
+    .stat-teal::after{background:radial-gradient(circle,rgba(43,184,150,.08),transparent) !important}
+    .stat-red::before{background:linear-gradient(90deg,var(--red),#e06060) !important}
+    .stat-red::after{background:radial-gradient(circle,rgba(217,79,79,.08),transparent) !important}
+    .stat-blue::before{background:linear-gradient(90deg,var(--blue),#6a9ce0) !important}
+    .stat-blue::after{background:radial-gradient(circle,rgba(74,124,201,.08),transparent) !important}
 
     /* ══════════ CARTE MEMBRE ══════════ */
     .carte-membre-wrap {
@@ -335,7 +411,20 @@
     .cm-orn-t.r { background:linear-gradient(90deg,rgba(212,168,67,.55),transparent); }
     .cm-orn-l { width:4px; height:4px; background:#c9a24a; transform:rotate(45deg); opacity:.6; }
     @media(max-width:640px) { .carte-membre { width:100%; max-width:340px; } }
-  </style>
+  
+    /* ── Modal Confirmation */
+    .confirm-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:center;justify-content:center;z-index:9999;padding:20px;backdrop-filter:blur(6px)}
+    .confirm-modal.open{display:flex;animation:fadeIn .2s ease both}
+    .confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:360px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.7);text-align:center}
+    .confirm-box h3{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);margin-bottom:10px}
+    .confirm-box p{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.55}
+    .confirm-actions{display:flex;gap:10px;justify-content:center}
+    .confirm-btn-cancel{background:var(--s2);color:var(--muted);border:1px solid var(--border);border-radius:9px;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+    .confirm-btn-cancel:hover{border-color:var(--gold);color:var(--text)}
+    .confirm-btn-ok{background:var(--red);color:#fff;border:none;border-radius:9px;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;box-shadow:0 4px 14px rgba(217,79,79,.35)}
+    .confirm-btn-ok.safe{background:var(--teal);color:#080a0f;box-shadow:0 4px 14px rgba(43,184,150,.3)}
+    .confirm-btn-ok:hover{opacity:.85}
+</style>
 </head>
 <body>
 <!-- Banner init Supabase -->
@@ -465,11 +554,11 @@
       <div class="row">
         <div class="field">
           <label>Prénom *</label>
-          <input type="text" id="inp-prenom" placeholder="Votre prénom"/>
+          <input type="text" id="inp-prenom" maxlength="50" oninput="this.classList.remove('input-error')" placeholder="Votre prénom" autocapitalize="words" autocomplete="given-name"/>
         </div>
         <div class="field">
           <label>Nom *</label>
-          <input type="text" id="inp-nom" placeholder="Votre nom"/>
+          <input type="text" id="inp-nom" maxlength="50" oninput="this.classList.remove('input-error')" placeholder="Votre nom" autocapitalize="words" autocomplete="family-name"/>
         </div>
       </div>
       <div class="field">
@@ -482,7 +571,7 @@
             <option value="+221-expresso" data-prefix="70">Expresso 🟣</option>
             <option value="+221-wave" data-prefix="78">Wave 💙</option>
           </select>
-          <input type="tel" id="inp-tel" placeholder="77 000 00 00" style="flex:1"/>
+          <input type="tel" id="inp-tel" maxlength="20" oninput="this.classList.remove('input-error')" inputmode="tel" autocomplete="tel" placeholder="77 000 00 00" style="flex:1"/>
         </div>
         <p style="font-size:11px;color:var(--muted);margin-top:5px">Préfixes : Orange 77, Free 76, Expresso 70, Wave 78</p>
       </div>
@@ -581,7 +670,7 @@
       <div class="field">
         <label>Code secret administrateur</label>
         <div style="position:relative">
-          <input type="password" id="admin-code" placeholder="Entrez le code secret" onkeydown="if(event.key==='Enter')adminLogin()" aria-label="Code secret administrateur" autocomplete="current-password"/>
+          <input type="password" id="admin-code" maxlength="30" placeholder="Entrez le code secret" onkeydown="if(event.key==='Enter')adminLogin()" aria-label="Code secret administrateur" autocomplete="current-password"/>
           <button onclick="togglePass()" id="toggle-pass" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">Voir</button>
         </div>
       </div>
@@ -654,14 +743,14 @@
       <button onclick="closeEventModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px">✕</button>
     </div>
     <div style="padding:22px">
-      <div class="field"><label>Titre</label><input type="text" id="ev-titre" placeholder="Titre de l'événement"/></div>
+      <div class="field"><label>Titre</label><input type="text" id="ev-titre" maxlength="80" placeholder="Titre de l'événement"/></div>
       <div class="row">
         <div class="field"><label>Date</label><input type="date" id="ev-date"/></div>
         <div class="field"><label>Statut</label>
           <select id="ev-statut"><option value="à venir">À venir</option><option value="passé">Passé</option><option value="annulé">Annulé</option></select>
         </div>
       </div>
-      <div class="field"><label>Lieu</label><input type="text" id="ev-lieu" placeholder="Lieu"/></div>
+      <div class="field"><label>Lieu</label><input type="text" id="ev-lieu" maxlength="80" placeholder="Lieu"/></div>
       <div class="field"><label>Cotisation par membre (FCFA) — 0 = gratuit</label><input type="number" id="ev-cotisation" placeholder="Ex: 500" min="0" step="100"/></div>
       <div class="field"><label>Description</label><textarea id="ev-desc" rows="3" style="resize:vertical" placeholder="Description…"></textarea></div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
@@ -682,9 +771,9 @@ function showToast(msg, type='success') {
   const t = document.getElementById('toast');
   if(!t) return;
   t.textContent = msg;
-  t.className = 'toast ' + type;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
 // ═══════════════════ KEYBOARD & CLICK-OUTSIDE HANDLERS
@@ -776,8 +865,15 @@ const sbHeaders = {
 };
 
 // ── Lecture Supabase
+// Helper timeout fetch (8s)
+function _fetchTimeout(url, opts={}) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
 async function sbGet(table) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=*&order=id.asc', {
+  const res = await _fetchTimeout(SUPABASE_URL + '/rest/v1/' + table + '?select=*&order=id.asc', {
     headers: sbHeaders
   });
   if (!res.ok) throw new Error('sbGet ' + res.status);
@@ -786,7 +882,7 @@ async function sbGet(table) {
 
 // ── Upsert Supabase (insert ou update)
 async function sbUpsert(table, data) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+  const res = await _fetchTimeout(SUPABASE_URL + '/rest/v1/' + table, {
     method: 'POST',
     headers: { ...sbHeaders, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(Array.isArray(data) ? data : [data])
@@ -795,7 +891,7 @@ async function sbUpsert(table, data) {
 }
 
 async function sbDelete(table, field, value) {
-  await fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + field + '=eq.' + value, {
+  await _fetchTimeout(SUPABASE_URL + '/rest/v1/' + table + '?' + field + '=eq.' + value, {
     method: 'DELETE', headers: sbHeaders
   });
 }
@@ -804,6 +900,11 @@ async function sbDelete(table, field, value) {
 function saveLocal() {
   try {
     localStorage.setItem(SB_LOCAL_KEY, JSON.stringify(db));
+    // Sauvegarder les photos aussi en local
+    const photosLocal = {};
+    db.members.forEach(m => { if (m.photo) photosLocal["m_" + m.id] = m.photo; });
+    db.pending.forEach(p => { if (p.photo) photosLocal["p_" + p._pid] = p.photo; });
+    localStorage.setItem(SB_LOCAL_KEY + "_photos_local", JSON.stringify(photosLocal));
   } catch(e) {}
 }
 
@@ -819,6 +920,15 @@ function loadLocal() {
     db.cotisations      = d.cotisations      || [];
     db.eventCotisations = d.eventCotisations || [];
     if (d.events && d.events.length > 0) db.events = d.events;
+    // Recharger les photos locales
+    try {
+      const rawPhotos = localStorage.getItem(SB_LOCAL_KEY + "_photos_local");
+      if (rawPhotos) {
+        const photos = JSON.parse(rawPhotos);
+        db.members = db.members.map(m => photos["m_" + m.id] ? { ...m, photo: photos["m_" + m.id] } : m);
+        db.pending = db.pending.map(p => photos["p_" + p._pid] ? { ...p, photo: photos["p_" + p._pid] } : p);
+      }
+    } catch(e2) {}
     return true;
   } catch(e) { return false; }
 }
@@ -865,6 +975,7 @@ function dbPourSupabase() {
 // ── Sauvegarder vers Supabase + local
 async function saveDB() {
   // 1. Sauvegarde locale immédiate
+  db._lastSaved = new Date().toISOString();
   saveLocal();
   // 2. Sauvegarder les données (sans photos) dans daara_db
   try {
@@ -947,10 +1058,16 @@ function renderAfterLoad() {
     return ev;
   });
   if (changed) saveDB();
-  // Générer cotisations si nécessaire
-  if (db.members.length > 0 && db.cotisations.length === 0) {
-    db.members.forEach(m => { db.cotisations.push(...genCotisations(m.id, m.dateInscription)); });
-    saveDB();
+  // Générer cotisations manquantes (incremental, évite doublons)
+  if (db.members.length > 0) {
+    let added = 0;
+    const existingIds = new Set(db.cotisations.map(c=>c.id));
+    db.members.forEach(m => {
+      genCotisations(m.id, m.dateInscription).forEach(c => {
+        if (!existingIds.has(c.id)) { db.cotisations.push(c); existingIds.add(c.id); added++; }
+      });
+    });
+    if (added > 0) saveDB();
   }
   document.querySelectorAll('img[id^="logo"]').forEach(img => img.src = LOGO_SRC);
 }
@@ -1100,9 +1217,19 @@ document.querySelectorAll('img[id^="logo"]').forEach(img => img.src = LOGO_SRC);
 
 // ═══════════════════ NAVIGATION
 function showPage(id) {
+  // Protection : empêcher l'accès à la page admin sans authentification
+  if (id === 'admin' && !window._adminAuthenticated) {
+    id = 'admin-login';
+  }
+  // Protection : empêcher l'accès au profil membre sans être connecté
+  if (id === 'member-profile' && !window._currentMember) {
+    id = 'member-login';
+  }
+  const el = document.getElementById('page-' + id);
+  if (!el) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  window.scrollTo(0,0);
+  el.classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 // ═══════════════════ PHOTO PREVIEW
@@ -1167,6 +1294,14 @@ function submitInscription() {
   const section = document.getElementById('inp-section').value;
   const err = document.getElementById('inscr-error');
 
+  // Sanitiser les entrées texte
+  const sanitize = s => s.replace(/<[^>]*>/g,'').replace(/[<>"']/g,'').trim();
+  const prenomClean = sanitize(prenom);
+  const nomClean = sanitize(nom);
+  if(prenomClean !== prenom || nomClean !== nom) {
+    err.textContent = '⚠️ Caractères non autorisés dans le nom ou prénom.';
+    err.style.display = 'block'; return;
+  }
   if(!prenom || !nom || !tel || !section) {
     let missing = [];
     if(!prenom) missing.push('Prénom');
@@ -1175,7 +1310,11 @@ function submitInscription() {
     if(!section) missing.push('Section');
     err.textContent = '⚠️ Champs obligatoires manquants : ' + missing.join(', ');
     err.style.display = 'block';
-    // Scroll vers l'erreur
+    // Highlight champs vides
+    if(!prenom) document.getElementById('inp-prenom').classList.add('input-error');
+    if(!nom) document.getElementById('inp-nom').classList.add('input-error');
+    if(!tel) document.getElementById('inp-tel').classList.add('input-error');
+    if(!section) document.getElementById('inp-section').classList.add('input-error');
     err.scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
@@ -1206,11 +1345,17 @@ function submitInscription() {
     return;
   }
 
+  // Désactiver le bouton pendant la sauvegarde
+  const submitBtn = document.querySelector('#page-inscription .btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Envoi en cours...'; }
+
   const newEntry = { _pid: Date.now(), prenom, nom, telephone: telNorm, section, photo: photoData };
   db.pending.push(newEntry);
-  saveDB();
+  saveDB().finally(() => {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '✓ Envoyer ma demande'; }
+  });
   // Sauvegarder la photo séparément dans daara_photos
-  if (photoData) savePhoto("p_" + newEntry._pid, photoData);
+  if (photoData) savePhoto("p_" + newEntry._pid, photoData).catch(()=>{});
   // Sync vers Google Sheets
   syncToSheets({ _pid: newEntry._pid, prenom, nom, telephone: telNorm, section }, 'pending');
 
@@ -1236,31 +1381,90 @@ function togglePass() {
   if(inp.type==='password') { inp.type='text'; btn.textContent='Cacher'; }
   else { inp.type='password'; btn.textContent='Voir'; }
 }
+// Compteur tentatives login
+let _loginAttempts = 0;
+let _loginLocked = false;
+let _loginLockTimer = null;
+
 function adminLogin() {
+  if (_loginLocked) return;
   const code = document.getElementById('admin-code').value;
   const err = document.getElementById('login-error');
-  if(code === ADMIN_CODE) {
-    err.style.display='none';
-    document.getElementById('admin-code').value='';
+
+  if (code === ADMIN_CODE) {
+    _loginAttempts = 0;
+    err.style.display = 'none';
+    document.getElementById('admin-code').value = '';
+    window._adminAuthenticated = true; // ← flag correct
+    window._adminLoginTime = Date.now();
     showPage('admin');
     adminPage('dashboard');
+    startAdminSessionTimer(); // timeout de session
   } else {
-    err.style.display='block';
-    document.getElementById('admin-code').value='';
+    _loginAttempts++;
+    document.getElementById('admin-code').value = '';
+    if (_loginAttempts >= 5) {
+      _loginLocked = true;
+      err.innerHTML = '🔒 Trop de tentatives. Réessayez dans <span id="lock-countdown">30</span>s';
+      err.style.display = 'block';
+      let secs = 30;
+      _loginLockTimer = setInterval(() => {
+        secs--;
+        const el = document.getElementById('lock-countdown');
+        if (el) el.textContent = secs;
+        if (secs <= 0) {
+          clearInterval(_loginLockTimer);
+          _loginLocked = false;
+          _loginAttempts = 0;
+          err.style.display = 'none';
+        }
+      }, 1000);
+    } else {
+      err.textContent = '❌ Code incorrect (' + _loginAttempts + '/5)';
+      err.style.display = 'block';
+    }
   }
 }
-function adminLogout() { 
-  if(!confirm('Se déconnecter de l\'espace administrateur ?')) return;
-  window._adminAuthenticated = false; 
-  showPage('home'); 
+
+// Timeout de session admin : déconnexion après 30 min d'inactivité
+let _adminSessionTimer = null;
+function startAdminSessionTimer() {
+  clearTimeout(_adminSessionTimer);
+  _adminSessionTimer = setTimeout(() => {
+    if (window._adminAuthenticated) {
+      adminLogout();
+      showToast('⏱ Session expirée — reconnectez-vous', 'error');
+    }
+  }, 30 * 60 * 1000); // 30 minutes
+}
+// Réinitialiser le timer à chaque interaction admin
+document.addEventListener('click', () => {
+  if (window._adminAuthenticated) startAdminSessionTimer();
+});
+function adminLogout() {
+  // confirm() bloqué sur mobile - on déconnecte directement
+  window._adminAuthenticated = false;
+  showPage('home');
+  showToast('✓ Déconnexion réussie', 'success');
 }
 
 // ═══════════════════ AVATAR
+// Helper vérification auth admin
+function isAdmin() {
+  if (!window._adminAuthenticated) {
+    showToast('⚠️ Session expirée — reconnectez-vous', 'error');
+    showPage('admin-login');
+    return false;
+  }
+  return true;
+}
+
 const AV_COLORS = ['#d4a843','#3dbfa0','#9b6ee0','#5c8de0','#e05c5c','#3dbf82'];
+function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function avatarHTML(member, size=44) {
   const c = AV_COLORS[(member.id||1) % AV_COLORS.length];
-  const initials = ((member.prenom||'?')[0]+(member.nom||'?')[0]).toUpperCase();
-  if(member.photo) return `<img src="${member.photo}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0" alt=""/>`;
+  const initials = _esc(((member.prenom||'?')[0]+(member.nom||'?')[0]).toUpperCase());
+  if(member.photo && member.photo.startsWith('data:image')) return `<img src="${member.photo}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0" alt="Photo membre"/>`;
   return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${c}22;border:2px solid ${c}55;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Playfair Display',serif;color:${c};font-weight:700;font-size:${Math.round(size*.34)}px">${initials}</div>`;
 }
 
@@ -1268,9 +1472,11 @@ function avatarHTML(member, size=44) {
 function genCotisations(membreId, dateInscription) {
   const result = [];
   const start = new Date(dateInscription);
+  if (isNaN(start.getTime())) return result; // date invalide → protection
   const now = new Date();
   let d = new Date(start.getFullYear(), start.getMonth(), 1);
-  while(d <= now) {
+  let count = 0;
+  while(d <= now && count < 120) { // cap 10 ans max
     result.push({
       id: `${membreId}-${d.getFullYear()}-${d.getMonth()}`,
       membreId,
@@ -1279,26 +1485,35 @@ function genCotisations(membreId, dateInscription) {
       montant: COTISATION, statut: 'en attente', datePaiement: null,
     });
     d = new Date(d.getFullYear(), d.getMonth()+1, 1);
+    count++;
   }
   return result;
 }
 
 // ═══════════════════ APPROVE / REJECT
-function approve(pid) {
+async function approve(pid) {
+  if(!isAdmin()) return;
   const p = db.pending.find(x=>x._pid===pid);
   if(!p) return;
   const newId = Date.now();
   const dateInscription = new Date().toISOString().slice(0,10);
-  const photoFinale = p.photo || null;
+  // Récupérer photo depuis localStorage si absente dans db (cas multi-appareils)
+  let photoFinale = p.photo || null;
+  if (!photoFinale || photoFinale === '__local__') {
+    try {
+      const localPhotos = JSON.parse(localStorage.getItem(SB_LOCAL_KEY + '_photos_local') || '{}');
+      photoFinale = localPhotos['p_' + p._pid] || null;
+    } catch(e) {}
+  }
 
   db.members.push({...p, id:newId, statut:'actif', dateInscription, role:'Membre', fraisCarte:'impayé', photo: photoFinale});
   db.cotisations.push(...genCotisations(newId, dateInscription));
   if(!db.eventCotisations) db.eventCotisations = [];
   db.eventCotisations.push(...genEventCotisations(newId));
   db.pending = db.pending.filter(x=>x._pid!==pid);
-  saveDB();
+  await saveDB();
   // Sauvegarder photo avec le nouvel ID membre dans daara_photos
-  if (photoFinale) savePhoto("m_" + newId, photoFinale);
+  if (photoFinale) await savePhoto("m_" + newId, photoFinale);
   // Sync vers Google Sheets
   syncToSheets({ id:newId, prenom:p.prenom, nom:p.nom, telephone:p.telephone, section:p.section, role:'Membre', statut:'actif', dateInscription, fraisCarte:'impayé' }, 'member');
   showToast(`✓ ${p.prenom} ${p.nom} accepté(e) comme membre`, 'success');
@@ -1313,23 +1528,31 @@ function approve(pid) {
   }
 }
 function reject(pid) {
+  if(!isAdmin()) return;
   const p = db.pending.find(x=>x._pid===pid);
   if(!p) return;
-  if(!confirm(`Refuser la demande de ${p.prenom} ${p.nom} ?`)) return;
-  db.pending = db.pending.filter(x=>x._pid!==pid);
-  saveDB();
-  showToast(`Demande de ${p.prenom} ${p.nom} refusée`, 'error');
-  adminPage(currentAdminPage);
+  askConfirm('Refuser la demande', `Refuser la demande de ${p.prenom} ${p.nom} ?`, () => {
+    db.pending = db.pending.filter(x=>x._pid!==pid);
+    saveDB();
+    showToast(`Demande de ${p.prenom} ${p.nom} refusée`, 'error');
+    adminPage(currentAdminPage);
+  });
 }
 function removeMember(id) {
-  if(!confirm('Supprimer ce membre définitivement ?')) return;
-  db.members = db.members.filter(m=>m.id!==id);
-  db.cotisations = db.cotisations.filter(c=>c.membreId!==id);
-  db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.membreId!==id);
-  saveDB();
-  adminPage('members');
+  if(!isAdmin()) return;
+  const m = db.members.find(x=>x.id===id);
+  const nom = m ? `${m.prenom} ${m.nom}` : 'ce membre';
+  askConfirm('Supprimer le membre', `Supprimer définitivement ${nom} ? Ses cotisations seront aussi supprimées.`, () => {
+    db.members = db.members.filter(m=>m.id!==id);
+    db.cotisations = db.cotisations.filter(c=>c.membreId!==id);
+    db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.membreId!==id);
+    saveDB();
+    showToast('Membre supprimé', 'error');
+    adminPage('members');
+  });
 }
 function markPaid(cotId) {
+  if(!isAdmin()) return;
   db.cotisations = db.cotisations.map(c=>c.id===cotId?{...c,statut:'payé',datePaiement:new Date().toISOString().slice(0,10)}:c);
   saveDB();
   showToast('✓ Cotisation confirmée comme payée', 'success');
@@ -1489,23 +1712,27 @@ function validerMoisCotisation() {
 
 // ═══════════════════ SUPPRIMER UNE COTISATION (bouton 🗑️ direct)
 function supprimerCotisation(cotId) {
+  if(!isAdmin()) return;
   const c = db.cotisations.find(x => x.id === cotId);
   if (!c) return;
   const m = db.members.find(x => x.id === c.membreId);
-  const nom = m ? `${m.prenom} ${m.nom}` : '';
-  if (!confirm(`Supprimer la cotisation "${c.mois}" de ${nom} ?`)) return;
-  db.cotisations = db.cotisations.filter(x => x.id !== cotId);
-  saveDB();
-  showToast(`🗑️ Cotisation "${c.mois}" supprimée`, 'error');
-  adminPage('cotisations');
+  const nom = m ? m.prenom + ' ' + m.nom : '';
+  askConfirm('Supprimer la cotisation', 'Supprimer la cotisation "' + c.mois + '" de ' + nom + ' ?', () => {
+    db.cotisations = db.cotisations.filter(x => x.id !== cotId);
+    saveDB();
+    showToast('Cotisation supprimée', 'error');
+    adminPage('cotisations');
+  });
 }
 function markEventCotPaid(ecId) {
+  if(!isAdmin()) return;
   db.eventCotisations = (db.eventCotisations||[]).map(ec=>ec.id===ecId?{...ec,statut:'payé',datePaiement:new Date().toISOString().slice(0,10)}:ec);
   saveDB();
   showToast('✓ Cotisation événement confirmée', 'success');
   adminPage('cotisations');
 }
 function markCartePayee(memberId) {
+  if(!isAdmin()) return;
   db.members = db.members.map(m => m.id===memberId ? {...m, fraisCarte:'payé', datePaiementCarte:new Date().toISOString().slice(0,10)} : m);
   saveDB();
   showToast('✅ Frais de carte confirmés', 'success');
@@ -1514,15 +1741,37 @@ function markCartePayee(memberId) {
 function genEventCotisations(membreId) {
   const existing = (db.eventCotisations||[]).map(ec=>ec.eventId+'-'+ec.membreId);
   const result = [];
-  (db.events||[]).filter(e=>e.cotisation>0).forEach(e=>{
+  // Tous les événements sont obligatoires
+  (db.events||[]).forEach(e=>{
     const key = e.id+'-'+membreId;
     if(!existing.includes(key)) {
-      result.push({id:`ec-${membreId}-${e.id}`,membreId,eventId:e.id,montant:e.cotisation,statut:'en attente',datePaiement:null});
+      result.push({
+        id:`ec-${membreId}-${e.id}`,
+        membreId,
+        eventId:e.id,
+        montant:e.cotisation||0,
+        statut: e.cotisation>0 ? 'en attente' : 'gratuit',
+        datePaiement:null
+      });
     }
   });
   return result;
 }
+// Filtre membres
+function filterMembers(val) {
+  const cards = document.querySelectorAll('#members-grid .card.member-card');
+  cards.forEach(card => {
+    const memberId = parseInt(card.dataset.id);
+    const m = db.members.find(x => x.id === memberId);
+    if (!m) { card.style.display = 'none'; return; }
+    let show = true;
+    if (val === 'actif') show = m.statut === 'actif';
+    else if (val === 'carte-impayee') show = m.fraisCarte !== 'payé';
+    card.style.display = show ? '' : 'none';
+  });
+}
 function toggleMemberField(memberId, field) {
+  if(!isAdmin()) return;
   db.members = db.members.map(m=>m.id===memberId?{...m,[field]:!m[field]}:m);
   saveDB();
   adminPage(currentAdminPage);
@@ -1557,30 +1806,58 @@ function closeEventModal() {
   setTimeout(()=>{ modal.style.display='none'; modal.style.opacity=''; modal.style.transition=''; }, 200);
 }
 function saveEvent() {
+  if(!isAdmin()) return;
   const titre = document.getElementById('ev-titre').value.trim();
   const date = document.getElementById('ev-date').value;
-  if(!titre||!date) return alert('Titre et date obligatoires');
-  const cotisation = parseInt(document.getElementById('ev-cotisation').value)||0;
+  if(!titre) { showToast('⚠️ Le titre est obligatoire', 'error'); return; }
+  if(!date) { showToast('⚠️ La date est obligatoire', 'error'); return; }
+  const cotisation = Math.max(0, parseInt(document.getElementById('ev-cotisation').value)||0);
   const ev = { titre, date, statut:document.getElementById('ev-statut').value, lieu:document.getElementById('ev-lieu').value, description:document.getElementById('ev-desc').value, cotisation };
   if(currentEventId) {
     db.events = db.events.map(e=>e.id===currentEventId?{...e,...ev}:e);
   } else {
     const newEv = {...ev,id:Date.now()};
     db.events.push(newEv);
-    // Générer cotisations événement pour tous les membres
+    // Inscrire automatiquement tous les membres à ce nouvel événement
     if(!db.eventCotisations) db.eventCotisations = [];
-    if(cotisation>0) {
-      db.members.forEach(m=>{
-        db.eventCotisations.push({id:`ec-${m.id}-${newEv.id}`,membreId:m.id,eventId:newEv.id,montant:cotisation,statut:'en attente',datePaiement:null});
+    db.members.forEach(m=>{
+      db.eventCotisations.push({
+        id:`ec-${m.id}-${newEv.id}`,
+        membreId:m.id,
+        eventId:newEv.id,
+        montant:cotisation,
+        statut: cotisation>0 ? 'en attente' : 'gratuit',
+        datePaiement:null
       });
-    }
+    });
   }
   saveDB(); closeEventModal(); adminPage('events');
 }
 function deleteEvent(id) {
-  if(!confirm('Supprimer cet événement ?')) return;
-  db.events = db.events.filter(e=>e.id!==id);
-  saveDB(); adminPage('events');
+  if(!isAdmin()) return;
+  const ev = db.events.find(e=>e.id===id);
+  const titre = ev ? ev.titre : 'cet événement';
+  askConfirm('Supprimer', `Supprimer "${titre}" ? Les paiements associés seront perdus.`, () => {
+    db.events = db.events.filter(e=>e.id!==id);
+    db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.eventId!==id);
+    saveDB();
+    showToast('Événement supprimé', 'error');
+    adminPage('events');
+  });
+}
+function marquerTousPayesEvent(eventId) {
+  if(!isAdmin()) return;
+  // Exclure les 'gratuit' (événements sans cotisation)
+  const nb = (db.eventCotisations||[]).filter(ec=>ec.eventId===eventId && ec.statut==='en attente').length;
+  if(nb===0){ showToast('Tous les paiements sont déjà enregistrés', 'success'); return; }
+  db.eventCotisations = (db.eventCotisations||[]).map(ec=>
+    ec.eventId===eventId && ec.statut==='en attente'
+      ? {...ec, statut:'payé', datePaiement:new Date().toISOString().slice(0,10)}
+      : ec
+  );
+  saveDB();
+  showToast(`✓ ${nb} paiement${nb>1?'s':''} enregistré${nb>1?'s':''}`, 'success');
+  adminPage('events');
 }
 
 // ═══════════════════ FICHE MEMBRE (EXPORT PDF/IMPRESSION)
@@ -1746,11 +2023,15 @@ function exportFicheMembre(memberId) {
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
-  if (win) win.focus();
+  if (win) {
+    win.focus();
+    setTimeout(() => URL.revokeObjectURL(url), 10000); // libérer mémoire après 10s
+  }
 }
 
 // ═══════════════════ EXPORT CSV
 function exportCSV() {
+  if(!isAdmin()) return;
   if(db.members.length===0) { showToast('Aucun membre à exporter', 'error'); return; }
   const headers = ['Prénom','Nom','Téléphone','Section','Statut','Date inscription','Rôle','Frais carte','Couverture médicale','Don sang','Ziar'];
   const rows = db.members.map(m => [
@@ -1770,6 +2051,7 @@ function exportCSV() {
 // ═══════════════════ ADMIN PAGES
 let currentAdminPage = 'dashboard';
 function adminPage(page) {
+  if (!window._adminAuthenticated) { showPage('admin-login'); return; }
   currentAdminPage = page;
   // Update nav
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -1788,69 +2070,157 @@ function adminPage(page) {
     const totalCot = db.cotisations.filter(c=>c.statut==='payé').reduce((s,c)=>s+c.montant,0);
     const totalPending = db.cotisations.filter(c=>c.statut!=='payé').reduce((s,c)=>s+c.montant,0);
     const totalEvCot = (db.eventCotisations||[]).filter(ec=>ec.statut==='payé').reduce((s,ec)=>s+ec.montant,0);
+    const _cotsPayables = db.cotisations.filter(c=>c.statut!=='gratuit');
+    const txPaiement = _cotsPayables.length>0?Math.round(_cotsPayables.filter(c=>c.statut==='payé').length/_cotsPayables.length*100):0;
     main.innerHTML = `
       <div class="fi">
         <div class="hero-banner">
-          <img src="${LOGO_SRC}" style="width:78px;height:78px;border-radius:50%;object-fit:cover;border:3px solid #3dbfa066;flex-shrink:0"/>
-          <div>
-            <p style="font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px">✦ Tableau de bord administrateur ✦</p>
-            <h1 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);margin-bottom:4px">DAA'RA SAHADATOU TOULAB TOUBA ENDSS</h1>
-            <button onclick="loadFromSheets()" style="margin-top:8px;background:linear-gradient(135deg,#3dbfa0,#2da88a);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">🔄 Synchroniser depuis tous les appareils</button>
+          <img src="${LOGO_SRC}" style="width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid rgba(43,184,150,.4);flex-shrink:0;box-shadow:0 0 24px rgba(43,184,150,.2)"/>
+          <div style="flex:1">
+            <p style="font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;opacity:.9">✦ Tableau de bord ✦</p>
+            <h1 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--gold);margin-bottom:8px;line-height:1.1">DAA'RA SAHADATOU TOULAB TOUBA ENDSS</h1>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button onclick="loadFromSheets()" style="background:linear-gradient(135deg,rgba(43,184,150,.2),rgba(43,184,150,.1));color:var(--teal);border:1px solid rgba(43,184,150,.3);border-radius:9px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Synchroniser
+              </button>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:11px;color:var(--muted)">${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span>
+                ${db._lastSaved?`<span style="font-size:10px;color:var(--muted);opacity:.7">💾 Sync: ${new Date(db._lastSaved).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>`:''}
+              </div>
+            </div>
           </div>
         </div>
+
+        <div class="section-label">Indicateurs clés</div>
         <div class="grid4">
-          <div class="stat-card"><div class="stat-label">Membres actifs</div><div class="stat-val" style="color:var(--gold)">${actifs}</div><p style="font-size:12px;color:var(--muted);margin-top:4px">sur ${db.members.length} au total</p></div>
-          <div class="stat-card"><div class="stat-label">Demandes en attente</div><div class="stat-val" style="color:var(--teal)">${db.pending.length}</div></div>
-          <div class="stat-card"><div class="stat-label">Cotisations reçues</div><div class="stat-val" style="color:var(--green)">${(totalCot+totalEvCot).toLocaleString()} F</div><p style="font-size:11px;color:var(--muted);margin-top:4px">mensuel + événements</p></div>
-          <div class="stat-card"><div class="stat-label">En attente de paiement</div><div class="stat-val" style="color:var(--gold)">${totalPending.toLocaleString()} F</div><p style="font-size:11px;color:var(--muted);margin-top:4px">${db.cotisations.filter(c=>c.statut!=='payé').length} cotisations</p></div>
+          <div class="stat-card stat-gold">
+            <div class="stat-label">👥 Membres actifs</div>
+            <div class="stat-val" style="color:var(--gold)">${actifs}</div>
+            <div class="stat-trend">sur ${db.members.length} inscrits</div>
+            <div style="margin-top:10px;height:4px;border-radius:4px;background:var(--border);overflow:hidden">
+              <div style="height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;width:${db.members.length?Math.round(actifs/db.members.length*100):0}%;transition:width 1s ease"></div>
+            </div>
+          </div>
+          <div class="stat-card stat-teal">
+            <div class="stat-label">⏳ En attente</div>
+            <div class="stat-val" style="color:var(--teal)">${db.pending.length}</div>
+            <div class="stat-trend">${db.pending.length===0?'✓ Aucune demande':'demandes à traiter'}</div>
+          </div>
+          <div class="stat-card stat-blue">
+            <div class="stat-label">💰 Cotisations reçues</div>
+            <div class="stat-val" style="color:var(--blue);font-size:22px">${(totalCot+totalEvCot).toLocaleString()} <span style="font-size:14px;opacity:.7">F</span></div>
+            <div class="stat-trend">mensuel + événements</div>
+          </div>
+          <div class="stat-card stat-red">
+            <div class="stat-label">📊 Taux de paiement</div>
+            <div class="stat-val" style="color:${txPaiement>=70?'var(--green)':txPaiement>=40?'var(--gold)':'var(--red)'}">${txPaiement}<span style="font-size:16px;opacity:.8">%</span></div>
+            <div style="margin-top:10px;height:4px;border-radius:4px;background:var(--border);overflow:hidden">
+              <div style="height:100%;background:linear-gradient(90deg,${txPaiement>=70?'var(--green),#2daa72':txPaiement>=40?'var(--gold),var(--gold2)':'var(--red),#e06060'});border-radius:4px;width:${txPaiement}%;transition:width 1s ease .2s"></div>
+            </div>
+          </div>
         </div>
-        <!-- Implications stats -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px">
-          <div class="stat-card" style="border-left:3px solid #3dbfa0">
-            <div class="stat-label">🏥 Couverture Médicale</div>
-            <div class="stat-val" style="color:var(--teal)">${db.members.filter(m=>m.couvertureMedicale).length}</div>
-            <p style="font-size:12px;color:var(--muted);margin-top:4px">membres inscrits</p>
+
+        <div class="chart-grid">
+          <div class="chart-wrap">
+            <div class="chart-title">Participation par activité</div>
+            <div class="chart-sub">Nombre de membres inscrits par programme</div>
+            <canvas id="chartActivites" height="180"></canvas>
           </div>
-          <div class="stat-card" style="border-left:3px solid #9b6ee0">
-            <div class="stat-label">☪️ Ziar</div>
-            <div class="stat-val" style="color:#9b6ee0">${db.members.filter(m=>m.ziar).length}</div>
-            <p style="font-size:12px;color:var(--muted);margin-top:4px">membres inscrits</p>
-          </div>
-          <div class="stat-card" style="border-left:3px solid var(--red)">
-            <div class="stat-label">🩸 Don de Sang</div>
-            <div class="stat-val" style="color:var(--red)">${db.members.filter(m=>m.donSang).length}</div>
-            <p style="font-size:12px;color:var(--muted);margin-top:4px">membres inscrits</p>
+          <div class="chart-wrap">
+            <div class="chart-title">État des cotisations</div>
+            <div class="chart-sub">Payées vs en attente</div>
+            <canvas id="chartCotisations" height="180"></canvas>
           </div>
         </div>
+
         ${db.pending.length>0?`
-        <div class="card" style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <h3 style="font-family:'Playfair Display',serif;font-size:15px;color:var(--teal)">🔔 Demandes en attente (${db.pending.length})</h3>
-            <button onclick="adminPage('pending')" class="btn-sm btn-accept">Voir tout</button>
+        <div class="section-label" style="margin-top:4px">Demandes récentes</div>
+        <div class="card" style="margin-bottom:22px;border-color:rgba(43,184,150,.15)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div>
+              <p style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--teal)">🔔 Demandes en attente</p>
+              <p style="font-size:11px;color:var(--muted);margin-top:2px">${db.pending.length} demande${db.pending.length>1?'s':''} à examiner</p>
+            </div>
+            <button onclick="adminPage('pending')" class="btn-sm btn-accept" style="font-size:12px">Voir tout →</button>
           </div>
           ${db.pending.slice(0,3).map(p=>`
-            <div class="member-row">
-              ${avatarHTML(p,40)}
-              <div style="flex:1"><p style="font-weight:600;font-size:14px">${p.prenom} ${p.nom}</p><p style="font-size:12px;color:var(--muted)">${p.section}</p></div>
+            <div class="member-row" style="padding:10px 0">
+              ${avatarHTML(p,44)}
+              <div style="flex:1"><p style="font-weight:600;font-size:14px">${p.prenom} ${p.nom}</p><p style="font-size:12px;color:var(--muted);margin-top:2px">🎓 ${p.section}${p.telephone?` · 📞 ${p.telephone}`:''}</p></div>
               <div class="action-row">
-                <button class="btn-sm btn-accept" onclick="approve(${p._pid})">✓ Accepter</button>
-                <button class="btn-sm btn-refuse" onclick="reject(${p._pid})">✕ Refuser</button>
+                <button class="btn-sm btn-accept" onclick="approve(${p._pid})">✓</button>
+                <button class="btn-sm btn-refuse" onclick="reject(${p._pid})">✕</button>
               </div>
             </div>
           `).join('')}
         </div>`:''}
+
+        <div class="section-label">Membres récents</div>
         <div class="card">
-          <h3 style="font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);margin-bottom:14px">👥 Membres récents</h3>
           ${db.members.length===0?'<p class="empty">Aucun membre — approuvez des demandes d\'adhésion</p>':
             db.members.slice(-5).reverse().map(m=>`
-            <div class="member-row">
-              ${avatarHTML(m,36)}
-              <div style="flex:1"><p style="font-size:13px;font-weight:600">${m.prenom} ${m.nom}</p><p style="font-size:11px;color:var(--muted)">${m.section||m.role}</p></div>
-              <span class="badge badge-teal">Actif</span>
+            <div class="member-row" style="padding:10px 0">
+              ${avatarHTML(m,42)}
+              <div style="flex:1">
+                <p style="font-size:14px;font-weight:600">${m.prenom} ${m.nom}</p>
+                <p style="font-size:11px;color:var(--muted);margin-top:2px">${m.section||m.role} · ${new Date(m.dateInscription).toLocaleDateString('fr-FR',{month:'short',year:'numeric'})}</p>
+              </div>
+              <span style="background:rgba(43,184,150,.12);color:var(--teal);border:1px solid rgba(43,184,150,.2);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600">Actif</span>
             </div>
           `).join('')}
         </div>
       </div>`;
+
+    // Graphiques Chart.js
+    setTimeout(()=>{
+      // Couleurs communes
+      const gridColor = 'rgba(255,255,255,.05)';
+      const tickColor = '#5a6070';
+      
+      // Graphique 1 : Activités
+      const ctx1 = document.getElementById('chartActivites');
+      if(ctx1 && typeof Chart!=='undefined') {
+        new Chart(ctx1, {
+          type:'bar',
+          data:{
+            labels:['Couverture Médicale','Ziar','Don de Sang'],
+            datasets:[{
+              label:'Membres',
+              data:[
+                db.members.filter(m=>m.couvertureMedicale).length,
+                db.members.filter(m=>m.ziar).length,
+                db.members.filter(m=>m.donSang).length
+              ],
+              backgroundColor:['rgba(43,184,150,.7)','rgba(155,110,224,.7)','rgba(217,79,79,.7)'],
+              borderColor:['rgba(43,184,150,1)','rgba(155,110,224,1)','rgba(217,79,79,1)'],
+              borderWidth:1.5,borderRadius:8,borderSkipped:false
+            }]
+          },
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,10,15,.9)',titleColor:'#e8e3d8',bodyColor:'#8892a0',borderColor:'rgba(255,255,255,.1)',borderWidth:1,cornerRadius:8,padding:10}},scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:11}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:11},stepSize:1}}}}
+        });
+      }
+      
+      // Graphique 2 : Cotisations donut
+      const ctx2 = document.getElementById('chartCotisations');
+      if(ctx2 && typeof Chart!=='undefined') {
+        const payees = db.cotisations.filter(c=>c.statut==='payé').length;
+        const attente = db.cotisations.filter(c=>c.statut!=='payé').length;
+        new Chart(ctx2, {
+          type:'doughnut',
+          data:{
+            labels:['Payées','En attente'],
+            datasets:[{
+              data:[payees||0, attente||0],
+              backgroundColor:['rgba(43,184,150,.8)','rgba(201,151,58,.6)'],
+              borderColor:['rgba(43,184,150,1)','rgba(201,151,58,1)'],
+              borderWidth:2,hoverOffset:6
+            }]
+          },
+          options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#8892a0',font:{size:12},padding:16,usePointStyle:true}},tooltip:{backgroundColor:'rgba(8,10,15,.9)',titleColor:'#e8e3d8',bodyColor:'#8892a0',borderColor:'rgba(255,255,255,.1)',borderWidth:1,cornerRadius:8,padding:10}}}
+        });
+      }
+    }, 50);
   }
 
   else if(page==='pending') {
@@ -1881,25 +2251,49 @@ function adminPage(page) {
   else if(page==='members') {
     main.innerHTML = `
       <div class="fi">
-        <div class="admin-header"><div><div class="page-title">Membres</div><div class="page-sub">${db.members.length} membres · ${db.members.filter(m=>m.statut==='actif').length} actifs</div></div>
-          <button class="btn-sm btn-accept" onclick="exportCSV()" style="height:fit-content">📥 Exporter CSV</button>
+        <div class="admin-header">
+          <div>
+            <div class="page-title">Membres</div>
+            <div class="page-sub">
+              <span style="color:var(--gold)">${db.members.filter(m=>m.statut==='actif').length} actifs</span>
+              · ${db.members.length} total
+              · <span style="color:var(--blue)">${db.members.filter(m=>m.fraisCarte==='payé').length} cartes payées</span>
+              · <span style="color:${db.members.length && db.members.filter(m=>m.fraisCarte!=='payé').length > 0 ? 'var(--red)' : 'var(--green)'}">${db.members.filter(m=>m.fraisCarte!=='payé').length} en attente</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select onchange="filterMembers(this.value)" id="member-filter" style="width:auto;padding:7px 12px;font-size:12px;border-radius:8px">
+              <option value="all">Tous</option>
+              <option value="actif">Actifs</option>
+              <option value="carte-impayee">Carte impayée</option>
+            </select>
+            <button class="btn-sm btn-accept" onclick="exportCSV()" style="height:fit-content;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+          </div>
         </div>
         <div class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="member-search" placeholder="Rechercher un membre par nom, prénom ou section…" oninput="filterMembers(this.value)"/>
         </div>
         ${db.members.length===0?`<div class="card"><p class="empty">Aucun membre — approuvez des demandes d'adhésion</p></div>`:
-        `<div id="members-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+        `<div id="members-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
           ${db.members.map(m=>`
-          <div class="card member-card" data-name="${(m.prenom+' '+m.nom).toLowerCase()}" data-section="${(m.section||'').toLowerCase()}">
-            <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:12px">
-              ${avatarHTML(m,70)}
-              <p style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-top:10px">${m.prenom} ${m.nom}</p>
-              <p style="font-size:12px;color:var(--muted);margin-top:2px">${m.section||m.role}</p>
-              <span class="badge badge-teal" style="margin-top:8px">Actif</span>
+          <div class="card member-card" data-name="${(m.prenom+' '+m.nom).toLowerCase()}" data-section="${(m.section||'').toLowerCase()}" data-id="${m.id}" style="padding:0;overflow:hidden">
+            <div style="background:linear-gradient(135deg,rgba(22,27,38,.9),rgba(8,10,15,.95));padding:22px 20px 18px;text-align:center;position:relative;border-bottom:1px solid var(--border)">
+              <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--teal),transparent)"></div>
+              ${avatarHTML(m,74)}
+              <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin-top:12px;letter-spacing:-.2px">${m.prenom} ${m.nom}</p>
+              <p style="font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em">${m.section||m.role}</p>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px">
+                <span style="background:rgba(43,184,150,.12);color:var(--teal);border:1px solid rgba(43,184,150,.2);border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;letter-spacing:.05em">✓ ACTIF</span>
+                ${m.fraisCarte==='payé'?`<span style="background:rgba(74,124,201,.12);color:var(--blue);border:1px solid rgba(74,124,201,.2);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700">🪪 CARTE</span>`:''}
+              </div>
             </div>
-            ${m.telephone?`<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px">📞 <span>${m.telephone}</span></div>`:''}
-            <div style="font-size:12px;color:var(--muted);margin-bottom:12px">📅 Membre depuis ${new Date(m.dateInscription).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</div>
+            <div style="padding:14px 18px 18px">
+              ${m.telephone?`<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;color:var(--text);opacity:.85">📞 <span>${m.telephone}</span></div>`:''}
+              <div style="font-size:11px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px">📅 <span>Membre depuis ${new Date(m.dateInscription).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</span></div>
             <!-- ── 3 indicateurs -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">
               <button onclick="toggleMemberField(${m.id},'couvertureMedicale')" title="Couverture Médicale" style="background:${m.couvertureMedicale?'#3dbfa022':'var(--s2)'};border:1px solid ${m.couvertureMedicale?'#3dbfa066':'var(--border)'};border-radius:8px;padding:7px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px">
@@ -2016,7 +2410,7 @@ function adminPage(page) {
                       <div style="display:flex;align-items:center;gap:10px">
                         <span style="font-size:13px;font-weight:600;color:var(--gold)">${ec.montant.toLocaleString()} FCFA</span>
                         <span class="badge" style="background:${ec.statut==='payé'?'#3dbfa022':'#d4a84322'};color:${ec.statut==='payé'?'var(--teal)':'var(--gold)'}">${ec.statut}</span>
-                        ${ec.statut!=='payé'?`<button class="btn-pay" onclick="markEventCotPaid('${ec.id}')">✓ Confirmé</button>`:''}
+                        ${ec.statut==='en attente'?`<button class="btn-pay" onclick="markEventCotPaid('${ec.id}')">✓ Confirmer</button>`:''}
                       </div>
                     </div>`;
                   }).join('')}
@@ -2043,36 +2437,68 @@ function adminPage(page) {
     main.innerHTML = `
       <div class="fi">
         <div class="admin-header">
-          <div><div class="page-title">Événements</div><div class="page-sub">${db.events.length} événements annuels</div></div>
+          <div><div class="page-title">Événements</div><div class="page-sub">${db.events.length} événements · suivi des paiements</div></div>
           <button class="btn btn-primary" style="width:auto;padding:10px 20px" onclick="openEventModal()">+ Créer</button>
         </div>
-        <div style="background:linear-gradient(135deg,#0d1a0e,#13151c);border:1px solid #3dbfa033;border-radius:var(--r);padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
-          <span style="font-size:24px">🌟</span>
-          <div>
-            <p style="font-size:12px;color:var(--teal);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Événements phares de la Dahira</p>
-            <p style="font-size:13px;color:var(--muted)">Grand Magal · Don de Sang · Ndogou Ramadan · Safar</p>
-          </div>
-        </div>
         ${db.events.length===0?`<div class="card"><p class="empty">Aucun événement — créez-en un !</p></div>`:
-          db.events.map(e=>`
-          <div class="card" style="margin-bottom:12px;border-left:3px solid ${e.couleur||'var(--gold)'}">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          db.events.map(e=>{
+            const cotisEvt = (db.eventCotisations||[]).filter(ec=>ec.eventId===e.id);
+            const nbPayes = cotisEvt.filter(ec=>ec.statut==='payé').length;
+            const nbTotal = cotisEvt.length;
+            const montantCollecte = cotisEvt.filter(ec=>ec.statut==='payé').reduce((s,ec)=>s+ec.montant,0);
+            const montantAttendu = cotisEvt.reduce((s,ec)=>s+ec.montant,0);
+            const pct = nbTotal>0?Math.round(nbPayes/nbTotal*100):0;
+            return `
+          <div class="card" style="margin-bottom:14px;border-left:3px solid ${e.couleur||'var(--gold)'}">
+            <!-- En-tête événement -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
               <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
                   ${e.emoji?`<span style="font-size:22px">${e.emoji}</span>`:''}
                   <h3 style="font-family:'Playfair Display',serif;font-size:16px;color:${e.couleur||'var(--text)'}">${e.titre}</h3>
                   <span class="badge" style="background:${scBg(e.statut)};color:${scColor(e.statut)}">${e.statut}</span>
                 </div>
-                <p style="font-size:13px;color:var(--muted);margin-bottom:4px">📅 ${new Date(e.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
-                ${e.lieu?`<p style="font-size:13px;color:var(--muted);margin-bottom:4px">📍 ${e.lieu}</p>`:''}
-                ${e.description?`<p style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5">${e.description}</p>`:''}
+                <p style="font-size:12px;color:var(--muted)">📅 ${new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}${e.lieu?` · 📍 ${e.lieu}`:''}</p>
               </div>
-              <div style="display:flex;gap:8px;margin-left:14px;flex-shrink:0">
-                <button class="btn-sm btn-accept" onclick="openEventModal(${e.id})">✏</button>
-                <button class="btn-sm btn-refuse" onclick="deleteEvent(${e.id})">🗑</button>
+              <div style="display:flex;gap:8px;margin-left:12px;flex-shrink:0">
+                <button class="btn-sm btn-accept" onclick="openEventModal(${e.id})" title="Modifier">✏</button>
+                <button class="btn-sm btn-refuse" onclick="deleteEvent(${e.id})" title="Supprimer">🗑</button>
               </div>
             </div>
-          </div>`).join('')}
+
+            <!-- Bloc participation -->
+            <div style="background:var(--s2);border-radius:10px;padding:14px 16px;border:1px solid var(--border)">
+              <p style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">${e.cotisation>0?'💰 Suivi des paiements':'✅ Participation obligatoire'}</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+                <div style="text-align:center">
+                  <p style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green);font-weight:700">${nbPayes}</p>
+                  <p style="font-size:10px;color:var(--muted);margin-top:2px">${e.cotisation>0?'Payés':'Confirmés'}</p>
+                </div>
+                <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border)">
+                  <p style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);font-weight:700">${nbTotal-nbPayes}</p>
+                  <p style="font-size:10px;color:var(--muted);margin-top:2px">En attente</p>
+                </div>
+                <div style="text-align:center">
+                  ${e.cotisation>0
+                    ? '<p style="font-size:18px;color:var(--text);font-weight:700">'+montantCollecte.toLocaleString()+' F</p><p style="font-size:10px;color:var(--muted);margin-top:2px">Collecté</p>'
+                    : '<p style="font-size:22px;color:var(--teal);font-weight:700">'+nbTotal+'</p><p style="font-size:10px;color:var(--muted);margin-top:2px">Membres</p>'
+                  }
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:11px;color:var(--muted)">Progression</span>
+                <span style="font-size:12px;font-weight:700;color:${pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--red)'}">${pct}%</span>
+              </div>
+              <div style="height:6px;border-radius:6px;background:var(--border);overflow:hidden;margin-bottom:12px">
+                <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,${pct>=80?'var(--green),#2daa72':pct>=50?'var(--gold),var(--gold2)':'var(--red),#e06060'});width:${pct}%;transition:width 1s ease"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:12px;color:var(--muted)">Total attendu : <strong style="color:var(--text)">${montantAttendu.toLocaleString()} F</strong></span>
+                <button onclick="marquerTousPayesEvent(${e.id})" style="background:rgba(45,170,114,.12);color:var(--green);border:1px solid rgba(45,170,114,.25);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✓ Tout marquer payé</button>
+              </div>
+            </div>
+          </div>`;
+          }).join('')}
       </div>`;
   }
 }
@@ -2194,7 +2620,7 @@ function copyNumber(num, feedbackId) {
 
       <div class="field">
         <label>📱 Numéro de téléphone</label>
-        <input type="tel" id="member-tel" placeholder="Ex: 77 123 45 67"
+        <input type="tel" id="member-tel" maxlength="20" placeholder="Ex: 77 123 45 67"
           onkeydown="if(event.key==='Enter')memberLogin()"
           oninput="document.getElementById('member-login-error').style.display='none'"
           style="font-size:18px;letter-spacing:.06em;text-align:center;padding:14px;"/>
@@ -2219,7 +2645,7 @@ function copyNumber(num, feedbackId) {
         <button onclick="showPage('inscription')" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:13px;font-weight:700">S'inscrire →</button>
       </p>
       <button onclick="showPage('home')" style="display:block;margin:8px auto 0;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer">← Retour à l'accueil</button>
-      <button onclick="if(confirm('Réinitialiser toutes les données ?')){localStorage.clear();location.reload();}" style="display:block;margin:6px auto 0;background:none;border:none;color:#555;font-size:11px;cursor:pointer;text-decoration:underline">🔄 Problème de connexion ? Réinitialiser</button>
+      <button onclick="askConfirm('Réinitialiser', 'Effacer toutes les données locales ? Supabase reste intact.', () => { localStorage.clear(); location.reload(); })" style="display:block;margin:6px auto 0;background:none;border:none;color:#555;font-size:11px;cursor:pointer;text-decoration:underline">🔄 Problème de connexion ? Réinitialiser</button>
     </div>
   </div>
 </div>
@@ -2306,25 +2732,6 @@ function copyAndPay(texte, elId) {
 }
 
 // ── MEMBER LOGIN
-function normalizePhone(tel) {
-  // Supprimer espaces, tirets, points, parenthèses, slashes
-  let t = (tel || '').replace(/[\s\-\.\(\)\/]/g, '');
-  // Supprimer les valeurs d'opérateur ajoutées par le select (ex: +221-orange)
-  t = t.replace(/\-(orange|free|expresso|wave|mtn)$/i, '');
-  // Normaliser
-  if (t.startsWith('00221')) t = '+221' + t.slice(5);
-  else if (t.startsWith('+221')) { /* already good */ }
-  else if (t.startsWith('221')) t = '+' + t;
-  // 9 chiffres locaux (7x ou 3x ou 6x)
-  else if (/^[736]\d{8}$/.test(t)) t = '+221' + t;
-  // 10 chiffres avec 0 devant
-  else if (/^0[736]\d{8}$/.test(t)) t = '+221' + t.slice(1);
-  // Format visuel "+221 77 123 45 67" (déjà nettoyé des espaces)
-  // Format abrégé "771234567" sans préfixe (9 chiffres)
-  else if (/^\d{9}$/.test(t)) t = '+221' + t;
-  return t;
-}
-
 function memberLogin() {
   const raw = document.getElementById('member-tel').value.trim();
   const err = document.getElementById('member-login-error');
@@ -2506,7 +2913,7 @@ function renderMemberContent() {
       ${e.lieu?`<p style="font-size:12px;color:var(--muted)">📍 ${e.lieu}</p>`:''}
       ${e.cotisation>0?`<p style="font-size:12px;color:var(--gold);margin-top:4px">💰 ${e.cotisation.toLocaleString()} FCFA</p>`:`<p style="font-size:12px;color:var(--teal);margin-top:4px">🆓 Entrée libre</p>`}
       ${e.description&&!isPast?`<p style="font-size:12px;margin-top:6px;line-height:1.5;color:var(--muted)">${e.description}</p>`:''}
-      ${paySection}</div>`;
+      <div id="pay-info-section">${paySection}</div></div>`;
   };
 
   // ══════════════════════════════════════════════════════
@@ -2774,6 +3181,41 @@ function imprimerCarte(memberId) {
   win.document.close();
 }
 
+</script>
+
+<!-- ═══ MODAL CONFIRMATION ═══ -->
+<div id="confirm-modal" class="confirm-modal">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirmer</h3>
+    <p id="confirm-msg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
+      <button class="confirm-btn-ok" id="confirm-ok-btn" onclick="execConfirm()">Confirmer</button>
+    </div>
+  </div>
+</div>
+<script>
+let _confirmCallback = null;
+function askConfirm(title, msg, callback, danger=true) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.className = 'confirm-btn-ok' + (danger ? '' : ' safe');
+  btn.textContent = danger ? 'Supprimer' : 'Confirmer';
+  _confirmCallback = callback;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('open');
+  _confirmCallback = null;
+}
+function execConfirm() {
+  closeConfirm();
+  if (_confirmCallback) _confirmCallback();
+}
+document.getElementById('confirm-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
 </script>
 </body>
 </html>
