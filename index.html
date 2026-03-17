@@ -439,6 +439,61 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════ PAGE : ACCUEIL -->
+
+<!-- ═══ MODAL CONFIRMATION ═══ -->
+<div id="confirm-modal" class="confirm-modal">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirmer</h3>
+    <p id="confirm-msg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
+      <button class="confirm-btn-ok" id="confirm-ok-btn" onclick="execConfirm()">Confirmer</button>
+    </div>
+  </div>
+</div>
+<script>
+let _confirmCallback = null;
+function askConfirm(title, msg, callback, danger=true) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.className = 'confirm-btn-ok' + (danger ? '' : ' safe');
+  btn.textContent = danger ? 'Supprimer' : 'Confirmer';
+  _confirmCallback = callback;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+  const modal = document.getElementById('confirm-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    delete modal.dataset.pendingAction;
+    delete modal.dataset.pendingId;
+  }
+  _confirmCallback = null;
+}
+function execConfirm() {
+  const modal = document.getElementById('confirm-modal');
+  const action = modal ? modal.dataset.pendingAction : null;
+  const pendingId = modal ? modal.dataset.pendingId : null;
+  closeConfirm();
+  // Exécuter via data attribute (plus fiable que closure sur mobile)
+  if (action === 'removeMember' && pendingId) {
+    const id = Number(pendingId);
+    db.members = db.members.filter(x=>x.id!==id);
+    db.cotisations = db.cotisations.filter(c=>c.membreId!==id);
+    db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.membreId!==id);
+    saveDB();
+    showToast('Membre supprimé', 'error');
+    adminPage('members');
+    return;
+  }
+  // Autres actions via callback
+  if (_confirmCallback) _confirmCallback();
+}
+document.getElementById('confirm-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+</script>
 <div id="toast" class="toast"></div>
 <div id="page-home" class="page active">
   <div class="wrap fi">
@@ -1395,7 +1450,8 @@ function adminLogin() {
     _loginAttempts = 0;
     err.style.display = 'none';
     document.getElementById('admin-code').value = '';
-    window._adminAuthenticated = true; // ← flag correct
+    window._adminAuthenticated = true;
+    sessionStorage.setItem('_adminAuth', '1');
     window._adminLoginTime = Date.now();
     showPage('admin');
     adminPage('dashboard');
@@ -1444,6 +1500,7 @@ document.addEventListener('click', () => {
 function adminLogout() {
   // confirm() bloqué sur mobile - on déconnecte directement
   window._adminAuthenticated = false;
+  sessionStorage.removeItem('_adminAuth');
   showPage('home');
   showToast('✓ Déconnexion réussie', 'success');
 }
@@ -1451,6 +1508,10 @@ function adminLogout() {
 // ═══════════════════ AVATAR
 // Helper vérification auth admin
 function isAdmin() {
+  // Restaurer depuis sessionStorage si rechargement
+  if (!window._adminAuthenticated && sessionStorage.getItem('_adminAuth') === '1') {
+    window._adminAuthenticated = true;
+  }
   if (!window._adminAuthenticated) {
     showToast('⚠️ Session expirée — reconnectez-vous', 'error');
     showPage('admin-login');
@@ -1541,15 +1602,28 @@ function reject(pid) {
 function removeMember(id) {
   if(!isAdmin()) return;
   const m = db.members.find(x=>x.id===id);
-  const nom = m ? `${m.prenom} ${m.nom}` : 'ce membre';
-  askConfirm('Supprimer le membre', `Supprimer définitivement ${nom} ? Ses cotisations seront aussi supprimées.`, () => {
-    db.members = db.members.filter(m=>m.id!==id);
-    db.cotisations = db.cotisations.filter(c=>c.membreId!==id);
-    db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.membreId!==id);
-    saveDB();
-    showToast('Membre supprimé', 'error');
-    adminPage('members');
-  });
+  const nom = m ? (m.prenom + ' ' + m.nom) : 'ce membre';
+  // Stocker l'id en data attribute pour éviter problème de closure
+  const modal = document.getElementById('confirm-modal');
+  if (!modal) { 
+    // Fallback si modal absent
+    if (window.confirm('Supprimer ' + nom + ' définitivement ?')) {
+      db.members = db.members.filter(x=>x.id!==id);
+      db.cotisations = db.cotisations.filter(c=>c.membreId!==id);
+      db.eventCotisations = (db.eventCotisations||[]).filter(ec=>ec.membreId!==id);
+      saveDB();
+      showToast('Membre supprimé', 'error');
+      adminPage('members');
+    }
+    return;
+  }
+  modal.dataset.pendingId = id;
+  modal.dataset.pendingAction = 'removeMember';
+  document.getElementById('confirm-title').textContent = 'Supprimer le membre';
+  document.getElementById('confirm-msg').textContent = 'Supprimer définitivement ' + nom + ' ? Ses cotisations seront aussi supprimées.';
+  const btn = document.getElementById('confirm-ok-btn');
+  if (btn) { btn.className = 'confirm-btn-ok'; btn.textContent = 'Supprimer'; }
+  modal.classList.add('open');
 }
 function markPaid(cotId) {
   if(!isAdmin()) return;
@@ -3183,39 +3257,5 @@ function imprimerCarte(memberId) {
 
 </script>
 
-<!-- ═══ MODAL CONFIRMATION ═══ -->
-<div id="confirm-modal" class="confirm-modal">
-  <div class="confirm-box">
-    <h3 id="confirm-title">Confirmer</h3>
-    <p id="confirm-msg"></p>
-    <div class="confirm-actions">
-      <button class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
-      <button class="confirm-btn-ok" id="confirm-ok-btn" onclick="execConfirm()">Confirmer</button>
-    </div>
-  </div>
-</div>
-<script>
-let _confirmCallback = null;
-function askConfirm(title, msg, callback, danger=true) {
-  document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-msg').textContent = msg;
-  const btn = document.getElementById('confirm-ok-btn');
-  btn.className = 'confirm-btn-ok' + (danger ? '' : ' safe');
-  btn.textContent = danger ? 'Supprimer' : 'Confirmer';
-  _confirmCallback = callback;
-  document.getElementById('confirm-modal').classList.add('open');
-}
-function closeConfirm() {
-  document.getElementById('confirm-modal').classList.remove('open');
-  _confirmCallback = null;
-}
-function execConfirm() {
-  closeConfirm();
-  if (_confirmCallback) _confirmCallback();
-}
-document.getElementById('confirm-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeConfirm();
-});
-</script>
 </body>
 </html>
