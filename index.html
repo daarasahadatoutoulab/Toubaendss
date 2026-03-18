@@ -197,6 +197,26 @@
 
     /* toast v2 ci-dessous */
 
+    /* ── Modal Crop Photo */
+    .crop-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);align-items:center;justify-content:center;z-index:10000;padding:16px;flex-direction:column;gap:0}
+    .crop-modal.open{display:flex;animation:fadeIn .25s ease both}
+    .crop-header{width:100%;max-width:440px;display:flex;justify-content:space-between;align-items:center;padding:0 4px 14px}
+    .crop-header h3{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)}
+    .crop-header p{font-size:12px;color:var(--muted)}
+    .crop-viewport{position:relative;width:300px;height:300px;border-radius:50%;overflow:hidden;cursor:grab;touch-action:none;background:#111;box-shadow:0 0 0 3px var(--gold),0 0 0 6px rgba(201,151,58,.2),0 12px 40px rgba(0,0,0,.8)}
+    .crop-viewport:active{cursor:grabbing}
+    .crop-viewport canvas{position:absolute;top:0;left:0;pointer-events:none}
+    .crop-overlay{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.6);pointer-events:none;z-index:2}
+    .crop-controls{width:100%;max-width:340px;margin-top:18px}
+    .crop-zoom-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .crop-zoom-row label{font-size:11px;color:var(--muted);white-space:nowrap;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+    .crop-zoom-row input[type=range]{flex:1;accent-color:var(--gold);height:4px}
+    .crop-actions{display:flex;gap:10px}
+    .crop-btn-cancel{flex:1;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+    .crop-btn-cancel:hover{border-color:var(--gold);color:var(--text)}
+    .crop-btn-ok{flex:2;padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#080a0f;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+    .crop-btn-ok:hover{opacity:.88}
+
     .stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.35);border-color:#35394a}
 
     /* ── Input error state */
@@ -439,6 +459,32 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════ PAGE : ACCUEIL -->
+
+<!-- ═══ MODAL CROP PHOTO ═══ -->
+<div id="crop-modal" class="crop-modal">
+  <div class="crop-header">
+    <div>
+      <h3>✂️ Recadrer la photo</h3>
+      <p>Glissez pour repositionner · Zoomez pour ajuster</p>
+    </div>
+    <button onclick="closeCropModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px">✕</button>
+  </div>
+  <div class="crop-viewport" id="crop-viewport">
+    <canvas id="crop-canvas"></canvas>
+    <div class="crop-overlay"></div>
+  </div>
+  <div class="crop-controls">
+    <div class="crop-zoom-row">
+      <label>🔍 Zoom</label>
+      <input type="range" id="crop-zoom" min="0.5" max="3" step="0.01" value="1" oninput="cropZoomUpdate()"/>
+      <span id="crop-zoom-val" style="font-size:12px;color:var(--muted);min-width:35px">100%</span>
+    </div>
+    <div class="crop-actions">
+      <button class="crop-btn-cancel" onclick="closeCropModal()">Annuler</button>
+      <button class="crop-btn-ok" onclick="applyCrop()">✓ Appliquer</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODAL CONFIRMATION ═══ -->
 <div id="confirm-modal" class="confirm-modal">
@@ -1289,33 +1335,185 @@ function showPage(id) {
 
 // ═══════════════════ PHOTO PREVIEW
 let photoData = null;
+let _editMemberId = null; // ID du membre dont on modifie la photo
+
+// ═══ CROP ENGINE ═══
+const _crop = {
+  img: null, zoom: 1, ox: 0, oy: 0,
+  dragging: false, lastX: 0, lastY: 0,
+  vSize: 300 // viewport circulaire 300px
+};
+
 function previewPhoto(input) {
   const file = input.files[0];
-  if(!file) return;
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    // Compresser la photo avec un canvas pour qu'elle reste petite (<200KB)
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX_SIZE = 300; // max 300px de large ou haut
-      let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
-      else       { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // Qualité 0.75 → photo légère et claire
-      photoData = canvas.toDataURL('image/jpeg', 0.75);
-      document.getElementById('photo-preview').src = photoData;
-      document.getElementById('photo-preview').style.display = 'block';
-      document.getElementById('photo-placeholder').style.display = 'none';
-      document.getElementById('photo-label').textContent = '✓ Photo ajoutée';
-      document.getElementById('photo-label').style.color = 'var(--teal)';
+      _crop.img = img;
+      // Zoom initial: couvre le cercle
+      const minZoom = Math.max(_crop.vSize / img.width, _crop.vSize / img.height);
+      _crop.zoom = minZoom;
+      _crop.ox = (img.width * _crop.zoom - _crop.vSize) / 2;
+      _crop.oy = (img.height * _crop.zoom - _crop.vSize) / 2;
+      // Configurer le canvas
+      const canvas = document.getElementById('crop-canvas');
+      canvas.width = _crop.vSize;
+      canvas.height = _crop.vSize;
+      // Configurer le range zoom
+      const zr = document.getElementById('crop-zoom');
+      zr.min = minZoom;
+      zr.max = Math.max(minZoom * 4, 3);
+      zr.step = 0.01;
+      zr.value = _crop.zoom;
+      document.getElementById('crop-zoom-val').textContent = Math.round(_crop.zoom * 100) + '%';
+      _cropDraw();
+      openCropModal();
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+function _cropDraw() {
+  const canvas = document.getElementById('crop-canvas');
+  if (!canvas || !_crop.img) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, _crop.vSize, _crop.vSize);
+  const dw = _crop.img.width * _crop.zoom;
+  const dh = _crop.img.height * _crop.zoom;
+  ctx.drawImage(_crop.img, -_crop.ox, -_crop.oy, dw, dh);
+}
+
+function cropZoomUpdate() {
+  const zr = document.getElementById('crop-zoom');
+  const newZoom = parseFloat(zr.value);
+  // Garder le centre lors du zoom
+  const cx = _crop.ox + _crop.vSize / 2;
+  const cy = _crop.oy + _crop.vSize / 2;
+  const ratio = newZoom / _crop.zoom;
+  _crop.zoom = newZoom;
+  _crop.ox = cx * ratio - _crop.vSize / 2;
+  _crop.oy = cy * ratio - _crop.vSize / 2;
+  _cropClamp();
+  document.getElementById('crop-zoom-val').textContent = Math.round(newZoom * 100) + '%';
+  _cropDraw();
+}
+
+function _cropClamp() {
+  const maxOx = _crop.img.width * _crop.zoom - _crop.vSize;
+  const maxOy = _crop.img.height * _crop.zoom - _crop.vSize;
+  _crop.ox = Math.max(0, Math.min(_crop.ox, maxOx));
+  _crop.oy = Math.max(0, Math.min(_crop.oy, maxOy));
+}
+
+function openCropModal() {
+  const modal = document.getElementById('crop-modal');
+  if (!modal) return;
+  modal.classList.add('open');
+  // Événements drag souris
+  const vp = document.getElementById('crop-viewport');
+  vp.onmousedown = e => { _crop.dragging=true; _crop.lastX=e.clientX; _crop.lastY=e.clientY; e.preventDefault(); };
+  window.onmousemove = e => {
+    if (!_crop.dragging) return;
+    _crop.ox -= (e.clientX - _crop.lastX);
+    _crop.oy -= (e.clientY - _crop.lastY);
+    _crop.lastX = e.clientX; _crop.lastY = e.clientY;
+    _cropClamp(); _cropDraw();
+  };
+  window.onmouseup = () => { _crop.dragging = false; };
+  // Événements touch mobile
+  vp.ontouchstart = e => {
+    if (e.touches.length === 1) {
+      _crop.dragging = true;
+      _crop.lastX = e.touches[0].clientX;
+      _crop.lastY = e.touches[0].clientY;
+      e.preventDefault();
+    } else if (e.touches.length === 2) {
+      _crop._pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  };
+  vp.ontouchmove = e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && _crop.dragging) {
+      _crop.ox -= (e.touches[0].clientX - _crop.lastX);
+      _crop.oy -= (e.touches[0].clientY - _crop.lastY);
+      _crop.lastX = e.touches[0].clientX;
+      _crop.lastY = e.touches[0].clientY;
+      _cropClamp(); _cropDraw();
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const ratio = dist / _crop._pinchDist;
+      _crop._pinchDist = dist;
+      const zr = document.getElementById('crop-zoom');
+      zr.value = Math.max(parseFloat(zr.min), Math.min(parseFloat(zr.max), _crop.zoom * ratio));
+      cropZoomUpdate();
+    }
+  };
+  vp.ontouchend = () => { _crop.dragging = false; };
+  // Zoom molette
+  vp.onwheel = e => {
+    e.preventDefault();
+    const zr = document.getElementById('crop-zoom');
+    zr.value = Math.max(parseFloat(zr.min), Math.min(parseFloat(zr.max), _crop.zoom + (e.deltaY > 0 ? -0.05 : 0.05)));
+    cropZoomUpdate();
+  };
+}
+
+function closeCropModal() {
+  const modal = document.getElementById('crop-modal');
+  if (modal) modal.classList.remove('open');
+  _crop.dragging = false;
+  _editMemberId = null; // Réinitialiser le mode édition
+}
+
+function applyCrop() {
+  if (!_crop.img) return;
+  const OUT = 400;
+  const out = document.createElement('canvas');
+  out.width = OUT; out.height = OUT;
+  const ctx = out.getContext('2d');
+  ctx.drawImage(_crop.img,
+    _crop.ox / _crop.zoom, _crop.oy / _crop.zoom,
+    _crop.vSize / _crop.zoom, _crop.vSize / _crop.zoom,
+    0, 0, OUT, OUT
+  );
+  const imgData = out.toDataURL('image/jpeg', 0.88);
+
+  if (_editMemberId !== null) {
+    // Mode édition membre existant
+    db.members = db.members.map(m =>
+      m.id === _editMemberId ? { ...m, photo: imgData } : m
+    );
+    saveDB();
+    savePhoto('m_' + _editMemberId, imgData).catch(() => {});
+    showToast('✓ Photo mise à jour', 'success');
+    _editMemberId = null;
+    closeCropModal();
+    adminPage('members');
+  } else {
+    // Mode inscription nouvelle demande
+    photoData = imgData;
+    document.getElementById('photo-preview').src = photoData;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-placeholder').style.display = 'none';
+    document.getElementById('photo-label').textContent = '✓ Photo recadrée';
+    document.getElementById('photo-label').style.color = 'var(--teal)';
+    closeCropModal();
+  }
+}
+
+// Ouvrir le crop pour modifier la photo d'un membre existant
+function changeMemberPhoto(memberId) {
+  if (!isAdmin()) return;
+  _editMemberId = memberId;
+  // Créer un input file temporaire
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = () => previewPhoto(inp);
+  inp.click();
 }
 
 function updateTelPlaceholder() {
@@ -2383,6 +2581,7 @@ function adminPage(page) {
                 <span style="font-size:9px;color:${m.donSang?'var(--red)':'var(--muted)'};font-weight:700;text-align:center;line-height:1.2">Don Sang</span>
               </button>
             </div>
+            <button class="btn-sm" style="width:100%;justify-content:center;background:var(--s2);color:var(--muted);border:1px solid var(--border);margin-bottom:6px;" onclick="changeMemberPhoto(${m.id})">📷 Changer la photo</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:linear-gradient(135deg,#1a3a5c,#0d2137);color:#3dbfa0;border:1px solid #3dbfa044;margin-bottom:6px;" onclick="exportFicheMembre(${m.id})">📄 Fiche membre</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:linear-gradient(135deg,#2a1f0a,#3d2e0d);color:#d4a843;border:1px solid #d4a84344;margin-bottom:6px;" onclick="voirCarteMembre(${m.id})">🪪 Carte membre</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:linear-gradient(135deg,#1a2a1a,#1f2e14);color:#3dbfa0;border:1px solid #3dbfa044;margin-bottom:6px;" onclick="window._currentMember=db.members.find(x=>x.id===${m.id});showPage('member-profile');renderMemberContent();">👁️ Voir espace membre</button>
