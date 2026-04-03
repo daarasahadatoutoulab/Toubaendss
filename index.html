@@ -1164,17 +1164,29 @@ async function chargerPhotos() {
     const rows = await sbGet('daara_photos');
     if (!rows || rows.length === 0) return;
     const map = {};
-    rows.forEach(r => { if (r.id && r.photo) map[r.id] = r.photo; });
+    // Ignorer les photos __local__ — elles ne sont pas utilisables
+    rows.forEach(r => { 
+      if (r.id && r.photo && r.photo !== '__local__' && r.photo.startsWith('data:image')) {
+        map[r.id] = r.photo; 
+      }
+    });
     // Injecter dans membres
     db.members = db.members.map(m => {
       const p = map['m_' + m.id];
-      return p ? { ...m, photo: p } : m;
+      if (p) return { ...m, photo: p };
+      // Si la photo locale est __local__, l'effacer pour eviter l'affichage vide
+      if (m.photo === '__local__') return { ...m, photo: null };
+      return m;
     });
     // Injecter dans pending
     db.pending = db.pending.map(p => {
       const ph = map['p_' + p._pid];
-      return ph ? { ...p, photo: ph } : p;
+      if (ph) return { ...p, photo: ph };
+      if (p.photo === '__local__') return { ...p, photo: null };
+      return p;
     });
+    // Sauvegarder les photos récupérées en local pour usage hors-ligne
+    saveLocal();
   } catch(e) {}
 }
 
@@ -1447,6 +1459,9 @@ async function checkForUpdates() {
       if (parsed.cotisations !== undefined)     db.cotisations     = parsed.cotisations;
       if (parsed.eventCotisations !== undefined) db.eventCotisations = parsed.eventCotisations;
       if (parsed.events && parsed.events.length > 0) db.events    = parsed.events;
+
+      // Recharger les photos depuis daara_photos (elles ne sont pas dans daara_db)
+      await chargerPhotos();
 
       // Notification si nouvelle demande d'adhésion
       if (newPendingCount > _prevPendingCount) {
@@ -1835,13 +1850,24 @@ function submitInscription() {
   const submitBtn = document.querySelector('#page-inscription .btn-primary');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Envoi en cours...'; }
 
-  const newEntry = { _pid: Date.now(), prenom, nom, telephone: telNorm, section, photo: photoData };
+  // La photo est sauvegardée directement dans Supabase (pas en __local__)
+  const newEntry = { _pid: Date.now(), prenom, nom, telephone: telNorm, section, photo: null };
   db.pending.push(newEntry);
+  // Sauvegarder la photo dans Supabase AVANT saveDB
+  if (photoData) {
+    savePhoto("p_" + newEntry._pid, photoData).then(() => {
+      // Mettre la photo dans l'entrée après upload Supabase réussi
+      db.pending = db.pending.map(p => p._pid === newEntry._pid ? {...p, photo: photoData} : p);
+      saveLocal();
+    }).catch(()=>{
+      // Fallback: garder la photo en local si Supabase échoue
+      db.pending = db.pending.map(p => p._pid === newEntry._pid ? {...p, photo: photoData} : p);
+      saveLocal();
+    });
+  }
   saveDB().finally(() => {
     if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '✓ Envoyer ma demande'; }
   });
-  // Sauvegarder la photo séparément dans daara_photos
-  if (photoData) savePhoto("p_" + newEntry._pid, photoData).catch(()=>{});
   // Sync vers Google Sheets
   syncToSheets({ _pid: newEntry._pid, prenom, nom, telephone: telNorm, section }, 'pending');
 
