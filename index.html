@@ -2282,6 +2282,54 @@ function toggleMemberField(memberId, field) {
   adminPage(currentAdminPage);
 }
 
+function modifierInfosMembre(memberId) {
+  if(!isAdmin()) return;
+  const m = db.members.find(x=>x.id===memberId);
+  if(!m) return;
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(30,26,20,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;backdrop-filter:blur(6px)';
+  modal.innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.12);max-height:90vh;overflow-y:auto">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:18px">✏️ Modifier les informations</h3>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Prénom</label>
+        <input id="edit-prenom" type="text" value="${m.prenom||''}" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:15px;background:var(--surface);color:var(--text)"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Nom</label>
+        <input id="edit-nom" type="text" value="${m.nom||''}" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:15px;background:var(--surface);color:var(--text)"/>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Téléphone</label>
+        <input id="edit-telephone" type="tel" value="${m.telephone||''}" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:15px;background:var(--surface);color:var(--text)"/>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Section / Filière</label>
+        <select id="edit-section" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:15px;background:var(--surface);color:var(--text)">
+          <option value="">Sélectionner...</option>
+          ${['Infirmier','Sage-femme','Biologie','Kinésithérapie','Urgentiste','Ophtalmologie','Prothèse dentaire','Préparateur en pharmacie','Management de la santé','Anesthésie','Autre'].map(s=>`<option value="${s}" ${m.section===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" style="padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
+        <button onclick="
+          const prenom = document.getElementById('edit-prenom').value.trim();
+          const nom = document.getElementById('edit-nom').value.trim();
+          const telephone = document.getElementById('edit-telephone').value.trim();
+          const section = document.getElementById('edit-section').value;
+          if(!prenom||!nom){showToast('⚠️ Prénom et nom obligatoires','error');return;}
+          db.members = db.members.map(x=>x.id===${memberId}?{...x,prenom,nom,telephone,section}:x);
+          saveDB();
+          showToast('✅ Informations mises à jour','success');
+          document.body.removeChild(this.closest('[style*=fixed]'));
+          adminPage('members');
+        " style="padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">✓ Enregistrer</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) document.body.removeChild(modal); });
+}
+
 function changeRole(memberId) {
   if(!isAdmin()) return;
   const m = db.members.find(x=>x.id===memberId);
@@ -2878,6 +2926,7 @@ function adminPage(page) {
                 <span style="font-size:9px;color:${m.donSang?'var(--red)':'var(--muted)'};font-weight:700;text-align:center;line-height:1.2">Don Sang</span>
               </button>
             </div>
+            <button class="btn-sm" style="width:100%;justify-content:center;background:linear-gradient(135deg,#e8e0ff,#d8d0f8);color:var(--violet);border:1px solid var(--violet)44;margin-bottom:6px;" onclick="modifierInfosMembre(${m.id})">✏️ Modifier les informations</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:var(--s2);color:var(--muted);border:1px solid var(--border);margin-bottom:6px;" onclick="changeRole(${m.id})">🏷️ Rôle : ${m.role||'Membre'}</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:var(--s2);color:var(--muted);border:1px solid var(--border);margin-bottom:6px;" onclick="changeMemberPhoto(${m.id})">📷 Changer la photo</button>
             <button class="btn-sm" style="width:100%;justify-content:center;background:linear-gradient(135deg,#ddeeff,#cce0f8);color:var(--teal);border:1px solid var(--teal)44;margin-bottom:6px;" onclick="exportFicheMembre(${m.id})">📄 Fiche membre</button>
