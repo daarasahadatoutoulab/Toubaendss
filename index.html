@@ -847,6 +847,12 @@ document.getElementById('confirm-modal').addEventListener('click', e => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Déconnexion
       </button>
+      <!-- Boutons sauvegarde -->
+      <div style="margin:0 10px 8px;display:flex;flex-direction:column;gap:6px">
+        <button onclick="exportMembresCSV()" title="Exporter membres en CSV" style="background:rgba(184,137,42,.1);border:1px solid rgba(184,137,42,.25);border-radius:8px;cursor:pointer;color:var(--gold);font-size:12px;padding:8px 10px;font-family:inherit;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;width:100%" onmouseenter="this.style.background='rgba(184,137,42,.2)'" onmouseleave="this.style.background='rgba(184,137,42,.1)'">📥 Exporter membres CSV</button>
+        <button onclick="exportBackupJSON()" title="Backup complet JSON" style="background:rgba(34,85,160,.1);border:1px solid rgba(34,85,160,.25);border-radius:8px;cursor:pointer;color:var(--blue);font-size:12px;padding:8px 10px;font-family:inherit;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;width:100%" onmouseenter="this.style.background='rgba(34,85,160,.2)'" onmouseleave="this.style.background='rgba(34,85,160,.1)'">💾 Backup JSON complet</button>
+        <button onclick="importerBackupJSON()" title="Restaurer depuis backup" style="background:rgba(26,122,78,.1);border:1px solid rgba(26,122,78,.25);border-radius:8px;cursor:pointer;color:var(--green);font-size:12px;padding:8px 10px;font-family:inherit;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;width:100%" onmouseenter="this.style.background='rgba(26,122,78,.2)'" onmouseleave="this.style.background='rgba(26,122,78,.1)'">📂 Restaurer backup JSON</button>
+      </div>
       <!-- Indicateur sync live -->
       <div id="sync-indicator" style="margin:0 10px 12px;padding:10px 12px;border-radius:10px;background:rgba(26,158,132,.06);border:1px solid rgba(43,184,150,.15);display:flex;align-items:center;gap:9px">
         <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;animation:pulse 2.5s infinite"></span>
@@ -1146,7 +1152,7 @@ function loadLocal() {
 
 // Sauvegarder UNE photo dans daara_photos
 async function savePhoto(id, photoBase64) {
-  if (!photoBase64) return;
+  if (!photoBase64 || photoBase64 === '__local__') return;
   try {
     await sbUpsert('daara_photos', [{ id: String(id), photo: photoBase64, updated_at: new Date().toISOString() }]);
   } catch(e) {}
@@ -1201,10 +1207,109 @@ async function saveDB() {
   // 3. Sauvegarder les photos dans daara_photos séparément
   try {
     const photosAEnvoyer = [];
-    db.members.forEach(m  => { if (m.photo)  photosAEnvoyer.push({ id: 'm_' + m.id,   photo: m.photo,  updated_at: new Date().toISOString() }); });
-    db.pending.forEach(p  => { if (p.photo)  photosAEnvoyer.push({ id: 'p_' + p._pid, photo: p.photo,  updated_at: new Date().toISOString() }); });
+    db.members.forEach(m  => { if (m.photo && m.photo !== '__local__')  photosAEnvoyer.push({ id: 'm_' + m.id,   photo: m.photo,  updated_at: new Date().toISOString() }); });
+    db.pending.forEach(p  => { if (p.photo && p.photo !== '__local__')  photosAEnvoyer.push({ id: 'p_' + p._pid, photo: p.photo,  updated_at: new Date().toISOString() }); });
     if (photosAEnvoyer.length > 0) await sbUpsert('daara_photos', photosAEnvoyer);
   } catch(e) {}
+  // 4. Backup membres dans daara_membres (table dédiée — protection contre perte)
+  try {
+    if (db.members && db.members.length > 0) {
+      const membresBackup = db.members
+        .filter(m => m.prenom && m.prenom !== 'Membre')
+        .map(m => ({
+          id: String(m.id),
+          prenom: m.prenom || '',
+          nom: m.nom || '',
+          telephone: m.telephone || '',
+          section: m.section || '',
+          role: m.role || 'Membre',
+          statut: m.statut || 'actif',
+          date_inscription: m.dateInscription || '',
+          frais_carte: m.fraisCarte || 'impayé',
+          updated_at: new Date().toISOString()
+        }));
+      if (membresBackup.length > 0) await sbUpsert('daara_membres', membresBackup);
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════
+// EXPORT CSV — Sauvegarde d'urgence des membres
+// ══════════════════════════════════════════════
+function exportMembresCSV() {
+  if (!db.members || db.members.length === 0) {
+    showToast('⚠️ Aucun membre à exporter', 'error');
+    return;
+  }
+  const headers = ['ID','Prénom','Nom','Téléphone','Section','Rôle','Statut','Date Inscription','Frais Carte'];
+  const rows = db.members.map(m => [
+    m.id || '',
+    (m.prenom || '').replace(/,/g, ' '),
+    (m.nom || '').replace(/,/g, ' '),
+    m.telephone || '',
+    (m.section || '').replace(/,/g, ' '),
+    m.role || 'Membre',
+    m.statut || 'actif',
+    m.dateInscription || '',
+    m.fraisCarte || 'impayé'
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `membres_daara_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ ${db.members.length} membres exportés`, 'success');
+}
+
+// Export JSON complet (backup total)
+function exportBackupJSON() {
+  const data = JSON.stringify(db, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `backup_daara_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Backup JSON téléchargé', 'success');
+}
+
+// Restaurer depuis un fichier JSON
+function importerBackupJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data || !Array.isArray(data.members)) {
+          showToast('❌ Fichier invalide', 'error');
+          return;
+        }
+        db.members = data.members || [];
+        db.pending = data.pending || [];
+        db.cotisations = data.cotisations || [];
+        db.eventCotisations = data.eventCotisations || [];
+        if (data.events && data.events.length > 0) db.events = data.events;
+        await saveDB();
+        showToast(`✅ ${db.members.length} membres restaurés !`, 'success');
+        if (document.getElementById('page-admin').classList.contains('active')) {
+          adminPage(currentAdminPage);
+        }
+      } catch(e) {
+        showToast('❌ Erreur lors de la restauration', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 // ── Charger depuis Supabase, sinon depuis local
@@ -3342,18 +3447,40 @@ function renderMemberContent() {
           <div><p style="font-size:13px;font-weight:700;color:var(--teal)">Paiement confirmé</p>
           <p style="font-size:11px;color:var(--muted)">${ec.montant.toLocaleString()} FCFA${ec.datePaiement?' · '+ec.datePaiement:''}</p></div></div>`;
       } else {
-        paySection = `<div style="margin-top:10px;background:var(--gold2)10;border:1px solid var(--gold2)33;border-radius:10px;padding:12px">
-          <p style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px">💰 Cotisation : ${e.cotisation.toLocaleString()} FCFA</p>
-          <button onclick="openWave('221789610614',${e.cotisation},'${m.prenom} ${m.nom} ${e.titre}')"
-             style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(135deg,#1565c0,#0d47a1);border:none;border-radius:9px;padding:11px;cursor:pointer;font-family:inherit;margin-bottom:8px">
-            <img src="${WAVE_LOGO}" style="width:20px;height:20px;border-radius:5px"/>
-            <span style="font-size:13px;font-weight:700;color:#fff">Payer avec Wave</span>
-          </button>
-          <a href="tel:%23144*1*221789610614*${e.cotisation}%23"
-             style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(135deg,#e65100,#bf360c);border:none;border-radius:9px;padding:11px;cursor:pointer;font-family:inherit;margin-bottom:8px;text-decoration:none">
-            <img src="${OM_LOGO}" style="width:20px;height:20px;border-radius:5px"/>
-            <span style="font-size:13px;font-weight:700;color:#fff">Payer avec Orange Money</span></a>
-          <p style="font-size:11px;color:var(--muted);text-align:center">Après paiement, l'admin confirmera votre règlement</p></div>`;
+        paySection = `<div style="margin-top:12px;background:linear-gradient(135deg,#e8e0d4ff,#e4eeff);border:1px solid var(--gold2)66;border-radius:12px;padding:14px">
+          <p style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">💳 Cotisation — ${e.cotisation.toLocaleString()} FCFA</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <!-- Wave -->
+            <a href="https://pay.wave.com/m/M_OfXmLxWIRMlEQ/c/sn/?amount=${e.cotisation}" target="_blank"
+              style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:13px 16px;background:#ddeeff;border:1.5px solid var(--blue)66;border-radius:10px;cursor:pointer;transition:all .2s"
+              onmouseover="this.style.borderColor='var(--blue)';this.style.background='#cce0ff'"
+              onmouseout="this.style.borderColor='var(--blue)66';this.style.background='#ddeeff'">
+              <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid var(--blue)44;flex-shrink:0">
+                <img src="${WAVE_LOGO}" style="width:100%;height:100%;object-fit:cover"/>
+              </div>
+              <div style="flex:1">
+                <p style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:1px">Payer via Wave</p>
+                <p style="font-size:11px;color:var(--muted)">78 961 06 14 · ${e.cotisation.toLocaleString()} FCFA</p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <!-- Orange Money -->
+            <a href="tel:%23144%231%231%23789610614%23${e.cotisation}%23" target="_blank"
+              style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:13px 16px;background:#fff3e8;border:1.5px solid #c05a0066;border-radius:10px;cursor:pointer;transition:all .2s"
+              onmouseover="this.style.borderColor='#c05a00';this.style.background='#ffe8d0'"
+              onmouseout="this.style.borderColor='#c05a0066';this.style.background='#fff3e8'">
+              <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid #c05a0044;flex-shrink:0">
+                <img src="${OM_LOGO}" style="width:100%;height:100%;object-fit:cover"/>
+              </div>
+              <div style="flex:1">
+                <p style="font-size:13px;font-weight:700;color:#c05a00;margin-bottom:1px">Payer via Orange Money</p>
+                <p style="font-size:11px;color:var(--muted)">78 961 06 14 · ${e.cotisation.toLocaleString()} FCFA</p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c05a00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+            </a>
+          </div>
+          <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Après paiement, l'administrateur confirmera votre règlement</p>
+        </div>`;
       }
     } else if(hasCot && isPast && isPaid) {
       paySection = `<div style="margin-top:10px;background:var(--teal)15;border:1px solid var(--teal)55;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px">
@@ -3482,6 +3609,80 @@ function renderMemberContent() {
             </div>
             </div>
           </div>`}
+    </div>
+
+    <!-- ═══ SECTION : COTISATIONS MENSUELLES ═══ -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <p style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap">💰 Mes cotisations mensuelles</p>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <p style="font-size:13px;font-weight:700;color:var(--text)">${paid.length} mois payés · ${unpaid.length} en attente</p>
+          <p style="font-size:12px;color:var(--muted);margin-top:2px">Total versé : <strong style="color:var(--teal)">${totalPaid.toLocaleString()} FCFA</strong></p>
+        </div>
+        <span style="background:${alreadyPaidThisMonth?'rgba(43,184,150,.12)':'rgba(217,79,79,.12)'};color:${alreadyPaidThisMonth?'var(--teal)':'var(--red)'};border:1px solid ${alreadyPaidThisMonth?'rgba(43,184,150,.3)':'rgba(217,79,79,.3)'};border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700">
+          ${alreadyPaidThisMonth?'✅ Payé ce mois':'⏳ Non payé ce mois'}
+        </span>
+      </div>
+
+      ${!alreadyPaidThisMonth ? `
+      <!-- Modalités de paiement mensuel -->
+      <div style="background:linear-gradient(135deg,#e8e0d4ff,#e4eeff);border:1px solid var(--gold2)66;border-radius:12px;padding:14px;margin-bottom:14px">
+        <p style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">💳 Cotisation du mois — ${COTISATION.toLocaleString()} FCFA</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <!-- Wave -->
+          <a href="https://pay.wave.com/m/M_OfXmLxWIRMlEQ/c/sn/?amount=${COTISATION}" target="_blank"
+            style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:13px 16px;background:#ddeeff;border:1.5px solid var(--blue)66;border-radius:10px;cursor:pointer;transition:all .2s"
+            onmouseover="this.style.borderColor='var(--blue)';this.style.background='#cce0ff'"
+            onmouseout="this.style.borderColor='var(--blue)66';this.style.background='#ddeeff'">
+            <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid var(--blue)44;flex-shrink:0">
+              <img src="${WAVE_LOGO}" style="width:100%;height:100%;object-fit:cover"/>
+            </div>
+            <div style="flex:1">
+              <p style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:1px">Payer via Wave</p>
+              <p style="font-size:11px;color:var(--muted)">78 961 06 14 · ${COTISATION.toLocaleString()} FCFA</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <!-- Orange Money -->
+          <a href="tel:%23144%231%231%23789610614%23${COTISATION}%23" target="_blank"
+            style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:13px 16px;background:#fff3e8;border:1.5px solid #c05a0066;border-radius:10px;cursor:pointer;transition:all .2s"
+            onmouseover="this.style.borderColor='#c05a00';this.style.background='#ffe8d0'"
+            onmouseout="this.style.borderColor='#c05a0066';this.style.background='#fff3e8'">
+            <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;border:1px solid #c05a0044;flex-shrink:0">
+              <img src="${OM_LOGO}" style="width:100%;height:100%;object-fit:cover"/>
+            </div>
+            <div style="flex:1">
+              <p style="font-size:13px;font-weight:700;color:#c05a00;margin-bottom:1px">Payer via Orange Money</p>
+              <p style="font-size:11px;color:var(--muted)">78 961 06 14 · ${COTISATION.toLocaleString()} FCFA</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c05a00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17z"/></svg>
+          </a>
+        </div>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Après paiement, l'administrateur confirmera votre règlement</p>
+      </div>` : `
+      <div style="background:rgba(43,184,150,.08);border:1px solid rgba(43,184,150,.25);border-radius:12px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">✅</span>
+        <div>
+          <p style="font-size:13px;font-weight:700;color:var(--teal)">Cotisation du mois réglée !</p>
+          <p style="font-size:12px;color:var(--muted)">Merci pour votre contribution — ${currentMonthFr}</p>
+        </div>
+      </div>`}
+
+      <!-- Historique des 6 derniers mois -->
+      ${mCots.length > 0 ? `
+      <p style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Historique récent</p>
+      ${mCots.slice(-6).reverse().map(c=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--text);text-transform:capitalize">${c.mois}</span>
+          <span style="background:${c.statut==='payé'?'rgba(43,184,150,.12)':'rgba(212,168,67,.12)'};color:${c.statut==='payé'?'var(--teal)':'var(--gold)'};border:1px solid ${c.statut==='payé'?'rgba(43,184,150,.3)':'rgba(212,168,67,.3)'};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">
+            ${c.statut==='payé'?'✓ Payé':'⏳ En attente'}
+          </span>
+        </div>`).join('')}
+      ` : '<p style="text-align:center;color:var(--muted);font-size:13px;padding:10px 0">Aucune cotisation enregistrée</p>'}
     </div>
 
     <!-- ═══ SECTION 3 : ÉVÉNEMENTS ═══ -->
