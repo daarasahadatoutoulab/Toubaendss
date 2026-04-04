@@ -2360,35 +2360,37 @@ function changeRole(memberId) {
   if(!isAdmin()) return;
   const m = db.members.find(x=>x.id===memberId);
   if(!m) return;
-  // Construire un modal inline de sélection de rôle
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(30,26,20,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;backdrop-filter:blur(6px)';
   modal.innerHTML = `
-    <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:340px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.12)">
-      <h3 style="font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--gold);margin-bottom:4px">Rôle de ${m.prenom} ${m.nom}</h3>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:18px">Sélectionnez le rôle à attribuer</p>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-        ${ROLES.map(r => `
-          <button onclick="this.parentNode.querySelectorAll('button').forEach(b=>b.style.background='');this.style.background='rgba(201,151,58,.15)';this.style.borderColor='var(--gold)';this.style.color='var(--gold)';window._selectedRole='${r}'"
-            style="padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:${m.role===r?'rgba(201,151,58,.15)':'var(--s2)'};color:${m.role===r?'var(--gold)':'var(--text)'};border-color:${m.role===r?'var(--gold)':'var(--border)'};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s">
-            ${m.role===r?'✓ ':''} ${r}
-          </button>`).join('')}
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.12)">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--gold);margin-bottom:4px">Poste / Rôle de ${m.prenom} ${m.nom}</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Saisissez librement le poste à attribuer</p>
+      <input id="role-input-modal" type="text" placeholder="Ex: Trésorier, Secrétaire, Chargé Communication…"
+        value="${m.role||''}"
+        style="width:100%;padding:12px 14px;border:1.5px solid var(--gold);border-radius:10px;font-family:inherit;font-size:14px;background:var(--surface);color:var(--text);outline:none;margin-bottom:12px"/>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Suggestions rapides :</p>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px">
+        ${ROLES.map(r=>`<button onclick="document.getElementById('role-input-modal').value='${r}'"
+          style="padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:var(--s2);color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">${r}</button>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <button onclick="document.body.removeChild(this.closest('[style*=fixed]'))" style="padding:11px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
         <button onclick="
-          const role=window._selectedRole||'${m.role}';
+          const role=(document.getElementById('role-input-modal').value||'').trim()||'${m.role||'Membre'}';
           db.members=db.members.map(x=>x.id===${memberId}?{...x,role:role}:x);
           saveDB();
-          showToast('✓ Rôle mis à jour : '+role,'success');
+          showToast('✓ Poste mis à jour : '+role,'success');
           document.body.removeChild(this.closest('[style*=fixed]'));
           adminPage('members');
         " style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Enregistrer</button>
       </div>
     </div>`;
-  window._selectedRole = m.role;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if(e.target===modal) document.body.removeChild(modal); });
+  setTimeout(()=>{ const inp=document.getElementById('role-input-modal'); if(inp) inp.focus(); },100);
 }
 
 // ═══════════════════ EVENT MODAL
