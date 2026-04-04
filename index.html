@@ -537,6 +537,8 @@ function execConfirm() {
   const modal = document.getElementById('confirm-modal');
   const action = modal ? modal.dataset.pendingAction : null;
   const pendingId = modal ? modal.dataset.pendingId : null;
+  // ⚠️ Sauvegarder le callback AVANT closeConfirm (qui le met à null)
+  const cb = _confirmCallback;
   closeConfirm();
   // Exécuter via data attribute (plus fiable que closure sur mobile)
   if (action === 'removeMember' && pendingId) {
@@ -549,8 +551,8 @@ function execConfirm() {
     adminPage('members');
     return;
   }
-  // Autres actions via callback
-  if (_confirmCallback) _confirmCallback();
+  // Autres actions via callback (deleteEvent, etc.)
+  if (cb) cb();
 }
 document.getElementById('confirm-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeConfirm();
@@ -2555,6 +2557,11 @@ function saveEvent() {
     });
   }
   saveDB(); closeEventModal(); adminPage('events');
+  // Rafraîchir l'espace membre si un membre est connecté (les événements y sont affichés)
+  if (window._currentMember) {
+    window._currentMember = db.members.find(x => x.id === window._currentMember.id) || window._currentMember;
+    if (document.getElementById('page-member-profile').classList.contains('active')) renderMemberContent();
+  }
 }
 function deleteEvent(id) {
   if(!isAdmin()) return;
@@ -2566,6 +2573,10 @@ function deleteEvent(id) {
     saveDB();
     showToast('Événement supprimé', 'error');
     adminPage('events');
+    // Rafraîchir l'espace membre si un membre est connecté
+    if (window._currentMember) {
+      if (document.getElementById('page-member-profile').classList.contains('active')) renderMemberContent();
+    }
   });
 }
 function marquerTousPayesEvent(eventId) {
