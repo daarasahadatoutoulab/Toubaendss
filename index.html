@@ -2540,6 +2540,12 @@ function saveEvent() {
   const ev = { titre, date, statut:document.getElementById('ev-statut').value, lieu:document.getElementById('ev-lieu').value, description:document.getElementById('ev-desc').value, cotisation };
   if(currentEventId) {
     db.events = db.events.map(e=>e.id===currentEventId?{...e,...ev}:e);
+    // Mettre a jour le montant dans les cotisations non encore payees
+    db.eventCotisations = (db.eventCotisations||[]).map(ec => {
+      if(ec.eventId !== currentEventId) return ec;
+      if(ec.statut === 'paye') return ec;
+      return {...ec, montant: cotisation, statut: cotisation > 0 ? 'en attente' : 'gratuit'};
+    });
   } else {
     const newEv = {...ev,id:Date.now()};
     db.events.push(newEv);
@@ -3535,6 +3541,16 @@ function copyAndPay(texte, elId) {
 }
 
 // ── MEMBER LOGIN
+function annulerDemande(pid) {
+  askConfirm('Annuler la demande', 'Voulez-vous vraiment retirer votre demande d\'adhésion ?', () => {
+    db.pending = db.pending.filter(x => x._pid !== pid);
+    saveDB();
+    showToast('Demande annulée', 'error');
+    document.getElementById('member-login-error').style.display = 'none';
+    document.getElementById('member-tel').value = '';
+  }, true);
+}
+
 function memberLogin() {
   const raw = document.getElementById('member-tel').value.trim();
   const err = document.getElementById('member-login-error');
@@ -3600,7 +3616,18 @@ function memberLogin() {
   });
 
   if (pending) {
-    showErr('⏳ Votre demande d\'adhésion est en cours d\'examen par l\'administrateur. Vous serez notifié(e) une fois approuvé(e).', 'var(--gold2)');
+    // Afficher message + bouton annuler la demande
+    err.style.display = 'block';
+    err.style.border = '1px solid var(--gold2)44';
+    err.style.color = 'var(--gold2)';
+    err.style.background = 'rgba(212,168,67,.12)';
+    err.style.borderRadius = '10px';
+    err.style.padding = '14px 16px';
+    err.style.marginBottom = '16px';
+    err.style.fontSize = '13px';
+    err.style.lineHeight = '1.6';
+    err.innerHTML = '<p style="margin-bottom:10px">⏳ <strong>Demande en cours d\'examen</strong><br>Votre demande d\'adhésion a bien été soumise. L\'administrateur va examiner votre profil.</p>'
+      + '<button onclick="annulerDemande(' + pending._pid + ')" style="background:rgba(184,50,50,.12);border:1px solid rgba(184,50,50,.35);color:var(--red);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">✕ Annuler ma demande</button>';
     return;
   }
 
