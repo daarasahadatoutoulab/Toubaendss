@@ -2097,6 +2097,111 @@ let _moisSelectionnes = new Set(); // mois à AJOUTER
 let _moisASupprimer  = new Set(); // mois à SUPPRIMER
 const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
+let _gmAnnee = new Date().getFullYear();
+
+function ouvrirMoisModalGlobal() {
+  if(!isAdmin()) return;
+  if(db.members.length === 0){ showToast('⚠️ Aucun membre enregistré', 'error'); return; }
+  _gmAnnee = new Date().getFullYear();
+  // Pré-sélectionner le mois courant
+  const moisCourant = new Date().getMonth();
+  document.getElementById('gm-mois-select').value = moisCourant;
+  document.getElementById('gm-annee-label').textContent = _gmAnnee;
+  renderGlobalMoisListe();
+  const modal = document.getElementById('global-mois-modal');
+  modal.style.display = 'flex';
+}
+
+function fermerGlobalMoisModal() {
+  document.getElementById('global-mois-modal').style.display = 'none';
+}
+
+function gmNavAnnee(delta) {
+  _gmAnnee += delta;
+  document.getElementById('gm-annee-label').textContent = _gmAnnee;
+  renderGlobalMoisListe();
+}
+
+function renderGlobalMoisListe() {
+  const moisIdx = parseInt(document.getElementById('gm-mois-select').value);
+  const annee   = _gmAnnee;
+  const liste   = document.getElementById('gm-membres-liste');
+  const resume  = document.getElementById('gm-resume');
+
+  const html = db.members.map(m => {
+    const cot = db.cotisations.find(c => c.membreId===m.id && c.annee===annee && c.moisIdx===moisIdx);
+    const isPaid = cot && cot.statut === 'payé';
+    const hasCot = !!cot;
+    return `<label style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;background:${isPaid?'var(--teal)08':'var(--surface)'};border:1px solid ${isPaid?'var(--teal)33':'var(--border)'};transition:background .15s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='${isPaid?'var(--teal)08':'var(--surface)'}'">
+      <input type="checkbox" data-id="${m.id}" ${isPaid?'checked':''} onchange="updateGmResume()" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer;flex-shrink:0"/>
+      <div style="display:flex;align-items:center;gap:10px;flex:1">
+        ${avatarHTML(m,36)}
+        <div>
+          <p style="font-size:14px;font-weight:600;color:var(--text)">${m.prenom} ${m.nom}</p>
+          <p style="font-size:11px;color:var(--muted)">${m.section||m.role||'Membre'}</p>
+        </div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${isPaid?'var(--teal)':'var(--muted)'};flex-shrink:0">${isPaid?'✓ Payé': hasCot?'⏳ En attente':'—'}</span>
+    </label>`;
+  }).join('');
+  liste.innerHTML = html;
+  updateGmResume();
+}
+
+function updateGmResume() {
+  const checks = document.querySelectorAll('#gm-membres-liste input[type=checkbox]');
+  const nb = [...checks].filter(c=>c.checked).length;
+  document.getElementById('gm-resume').textContent = `${nb} / ${db.members.length} membres cochés`;
+}
+
+function gmToutCocher(val) {
+  document.querySelectorAll('#gm-membres-liste input[type=checkbox]').forEach(c => c.checked = val);
+  updateGmResume();
+}
+
+function validerGlobalMois() {
+  if(!isAdmin()) return;
+  const moisIdx = parseInt(document.getElementById('gm-mois-select').value);
+  const annee   = _gmAnnee;
+  const today   = new Date().toISOString().slice(0,10);
+  const moisLabel = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][moisIdx] + ' ' + annee;
+  const checks  = document.querySelectorAll('#gm-membres-liste input[type=checkbox]');
+  let nbPaye = 0, nbRetire = 0;
+
+  checks.forEach(chk => {
+    const membreId = parseInt(chk.dataset.id);
+    const cotId    = `${membreId}-${annee}-${moisIdx}`;
+    const existing = db.cotisations.find(c => c.id === cotId);
+
+    if (chk.checked) {
+      // Doit être payé
+      if (existing) {
+        if (existing.statut !== 'payé') {
+          db.cotisations = db.cotisations.map(c => c.id===cotId ? {...c, statut:'payé', datePaiement:today} : c);
+          nbPaye++;
+        }
+      } else {
+        db.cotisations.push({ id:cotId, membreId, mois:moisLabel, annee, moisIdx, montant:COTISATION, statut:'payé', datePaiement:today });
+        nbPaye++;
+      }
+    } else {
+      // Doit être retiré si existant
+      if (existing) {
+        db.cotisations = db.cotisations.filter(c => c.id !== cotId);
+        nbRetire++;
+      }
+    }
+  });
+
+  saveDB();
+  fermerGlobalMoisModal();
+  const msg = [];
+  if (nbPaye > 0)   msg.push(`${nbPaye} paiement${nbPaye>1?'s':''} confirmé${nbPaye>1?'s':''}`);
+  if (nbRetire > 0) msg.push(`${nbRetire} retiré${nbRetire>1?'s':''}`);
+  showToast('✓ ' + (msg.join(' · ') || 'Aucun changement'), 'success');
+  adminPage('cotisations');
+}
+
 function ouvrirMoisModal(membreId) {
   _moisModalMembre = db.members.find(m => m.id === membreId);
   if (!_moisModalMembre) return;
@@ -2349,6 +2454,7 @@ function modifierInfosMembre(memberId) {
           showToast('✅ Informations mises à jour','success');
           document.body.removeChild(this.closest('[style*=fixed]'));
           adminPage('members');
+          if(window._currentMember && window._currentMember.id===${memberId}){ window._currentMember=db.members.find(x=>x.id===${memberId}); if(document.getElementById('page-member-profile').classList.contains('active')) renderMemberContent(); }
         " style="padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">✓ Enregistrer</button>
       </div>
     </div>`;
@@ -2385,6 +2491,7 @@ function changeRole(memberId) {
           showToast('✓ Poste mis à jour : '+role,'success');
           document.body.removeChild(this.closest('[style*=fixed]'));
           adminPage('members');
+          if(window._currentMember && window._currentMember.id===${memberId}){ window._currentMember=db.members.find(x=>x.id===${memberId}); if(document.getElementById('page-member-profile').classList.contains('active')) renderMemberContent(); }
         " style="padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Enregistrer</button>
       </div>
     </div>`;
@@ -2989,7 +3096,9 @@ function adminPage(page) {
     const totalEvCotPaid = allEvCots.filter(ec=>ec.statut==='payé').reduce((s,ec)=>s+ec.montant,0);
     main.innerHTML = `
       <div class="fi">
-        <div class="admin-header"><div><div class="page-title">Cotisations</div><div class="page-sub">Mensuelles &amp; Événements</div></div></div>
+        <div class="admin-header"><div><div class="page-title">Cotisations</div><div class="page-sub">Mensuelles &amp; Événements</div></div>
+          <button onclick="ouvrirMoisModalGlobal()" style="background:linear-gradient(135deg,var(--gold2)22,var(--gold3)22);border:1.5px solid var(--gold);border-radius:9px;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:700;color:var(--gold);font-family:inherit;display:flex;align-items:center;gap:7px;white-space:nowrap">📅 Gérer un mois pour tous</button>
+        </div>
 
         <!-- ══ TABS ══ -->
         <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:18px">
@@ -3129,7 +3238,7 @@ function adminPage(page) {
                 <div style="text-align:center">
                   ${e.cotisation>0
                     ? '<p style="font-size:18px;color:var(--text);font-weight:700">'+montantCollecte.toLocaleString()+' F</p><p style="font-size:10px;color:var(--muted);margin-top:2px">Collecté</p>'
-                    : '<p style="font-size:22px;color:var(--teal);font-weight:700">'+nbTotal+'</p><p style="font-size:10px;color:var(--muted);margin-top:2px">Membres</p>'
+                    : '<p style="font-size:18px;color:var(--muted);font-weight:700">'+montantAttendu.toLocaleString()+' F</p><p style="font-size:10px;color:var(--muted);margin-top:2px">Total attendu</p>'
                   }
                 </div>
               </div>
@@ -3335,6 +3444,46 @@ function copyNumber(num, feedbackId) {
         <button onclick="fermerMoisModal()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
         <button onclick="validerMoisCotisation()" style="flex:2;padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold2),var(--gold3));color:var(--bg);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">✓ Appliquer les modifications</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ MODAL : PAIEMENT GLOBAL PAR MOIS -->
+<div id="global-mois-modal" style="display:none;position:fixed;inset:0;background:#000d;align-items:center;justify-content:center;z-index:500;padding:16px;animation:fadeIn .25s ease both">
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.15);overflow:hidden">
+    <!-- Header -->
+    <div style="padding:18px 22px;background:linear-gradient(135deg,rgba(240,236,227,.98),var(--surface));border-bottom:1px solid var(--border);flex-shrink:0">
+      <p style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:4px">📅 Paiements du mois</p>
+      <p style="font-size:12px;color:var(--muted)">Cochez les membres qui ont payé pour le mois sélectionné</p>
+    </div>
+    <!-- Sélecteur mois/année -->
+    <div style="padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px">
+      <select id="gm-mois-select" onchange="renderGlobalMoisListe()" style="flex:1;padding:9px 12px;font-size:14px;border-radius:8px;border:1.5px solid var(--gold);color:var(--text);background:var(--surface)">
+        <option value="0">Janvier</option><option value="1">Février</option><option value="2">Mars</option>
+        <option value="3">Avril</option><option value="4">Mai</option><option value="5">Juin</option>
+        <option value="6">Juillet</option><option value="7">Août</option><option value="8">Septembre</option>
+        <option value="9">Octobre</option><option value="10">Novembre</option><option value="11">Décembre</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button onclick="gmNavAnnee(-1)" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:18px;cursor:pointer;padding:4px 10px;line-height:1">‹</button>
+        <span id="gm-annee-label" style="font-family:'Playfair Display',serif;font-size:15px;color:var(--text);min-width:42px;text-align:center"></span>
+        <button onclick="gmNavAnnee(1)" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:18px;cursor:pointer;padding:4px 10px;line-height:1">›</button>
+      </div>
+    </div>
+    <!-- Résumé + tout cocher -->
+    <div style="padding:10px 22px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+      <span id="gm-resume" style="font-size:12px;color:var(--muted)"></span>
+      <div style="display:flex;gap:8px">
+        <button onclick="gmToutCocher(true)" style="font-size:11px;font-weight:700;color:var(--teal);background:var(--teal)15;border:1px solid var(--teal)44;border-radius:6px;padding:5px 10px;cursor:pointer;font-family:inherit">✓ Tous</button>
+        <button onclick="gmToutCocher(false)" style="font-size:11px;font-weight:700;color:var(--red);background:var(--red)15;border:1px solid var(--red)44;border-radius:6px;padding:5px 10px;cursor:pointer;font-family:inherit">✗ Aucun</button>
+      </div>
+    </div>
+    <!-- Liste membres -->
+    <div id="gm-membres-liste" style="overflow-y:auto;flex:1;padding:10px 16px"></div>
+    <!-- Footer -->
+    <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0">
+      <button onclick="fermerGlobalMoisModal()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
+      <button onclick="validerGlobalMois()" style="flex:2;padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--gold2),var(--gold3));color:var(--bg);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">✓ Enregistrer les paiements</button>
     </div>
   </div>
 </div>
@@ -3846,7 +3995,7 @@ function genererCarteMembre(memberId) {
             </div>
           </div>
           <div class="cm-nom-bloc">
-            <div class="cm-label">Membre</div>
+            <div class="cm-label">${m.role||'Membre'}</div>
             <div class="cm-nom">${nomAff}</div>
             <div class="cm-section">${m.section||'—'}</div>
             ${telAff ? `<div class="cm-tel">📞 ${telAff}</div>` : ''}
