@@ -450,6 +450,42 @@
     .confirm-btn-ok{background:var(--red);color:#fff;border:none;border-radius:9px;padding:11px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;box-shadow:0 4px 14px rgba(217,79,79,.35)}
     .confirm-btn-ok.safe{background:var(--teal);color:var(--text);box-shadow:0 4px 14px rgba(43,184,150,.3)}
     .confirm-btn-ok:hover{opacity:.85}
+
+    /* ── GALERIE STYLES */
+    .galerie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:16px}
+    .galerie-item{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--s2);aspect-ratio:1;cursor:pointer;transition:transform .2s,box-shadow .2s}
+    .galerie-item:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+    .galerie-item img,.galerie-item video{width:100%;height:100%;object-fit:cover}
+    .galerie-item .galerie-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);opacity:0;transition:opacity .2s;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
+    .galerie-item:hover .galerie-overlay{opacity:1}
+    .galerie-item .galerie-type-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);border-radius:6px;padding:3px 8px;font-size:11px;color:#fff;font-weight:700;backdrop-filter:blur(4px)}
+    .galerie-item .galerie-cat{position:absolute;top:8px;left:8px;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
+    .galerie-actions{display:flex;gap:6px;margin-top:4px}
+    .galerie-btn-del{background:rgba(217,79,79,.85);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .galerie-btn-del:hover{opacity:.8}
+    .galerie-upload-zone{border:2px dashed var(--gold2);border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:var(--gold2)08;transition:all .2s}
+    .galerie-upload-zone:hover{background:var(--gold2)15;border-color:var(--gold)}
+    .galerie-filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .galerie-tab{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .galerie-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(184,137,42,.3)}
+    /* Lightbox */
+    .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10100;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+    .lightbox.open{display:flex;animation:fadeIn .25s ease both}
+    .lightbox-content{max-width:90vw;max-height:80vh;border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+    .lightbox-content img,.lightbox-content video{max-width:90vw;max-height:80vh;border-radius:10px;display:block;object-fit:contain}
+    .lightbox-caption{color:#fff;font-size:14px;margin-top:12px;text-align:center;opacity:.8;max-width:600px}
+    .lightbox-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:22px;cursor:pointer;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+    .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:22px;cursor:pointer;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background .2s}
+    .lightbox-nav:hover{background:rgba(255,255,255,.3)}
+    .lightbox-prev{left:16px}
+    .lightbox-next{right:16px}
+    /* Galerie publique (accueil + espace membre) */
+    .galerie-pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+    .galerie-pub-item{border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer;position:relative;background:var(--s2)}
+    .galerie-pub-item img,.galerie-pub-item video{width:100%;height:100%;object-fit:cover}
+    .galerie-pub-item .galerie-play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)}
+    .galerie-pub-pdf{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);border-radius:10px;border:1px solid var(--border);aspect-ratio:1;background:var(--s2);cursor:pointer;padding:8px;text-align:center}
+    @media(max-width:640px){.galerie-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}.galerie-pub-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}}
 </style>
 </head>
 <body>
@@ -471,6 +507,25 @@ CREATE TABLE IF NOT EXISTS daara_photos (
   updated_at timestamptz
 );</pre>
     <button onclick="location.reload()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--text);border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">🔄 Recharger après configuration</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PAGE : LIVE PUBLIC -->
+<div id="page-live" class="page">
+  <div class="wrap fi" style="justify-content:flex-start;padding-top:20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button onclick="showPage('home')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:8px;border-radius:8px;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;font-weight:600;transition:all .15s" onmouseenter="this.style.color='var(--text)'" onmouseleave="this.style.color='var(--muted)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Retour
+      </button>
+    </div>
+    <div class="header" style="margin-bottom:20px">
+      <img id="logo-live" class="logo" alt="Logo" style="width:72px;height:72px"/>
+      <h1 class="title" style="font-size:20px">Diffusion en Direct</h1>
+      <p class="subtitle">DAA'RA SAHADATOU TOULAB TOUBA ENDSS</p>
+    </div>
+    <!-- Contenu Live dynamique -->
+    <div id="live-public-content"></div>
   </div>
 </div>
 
@@ -617,6 +672,12 @@ document.getElementById('confirm-modal').addEventListener('click', e => {
         </div>
       </div>
     </div>
+
+    <!-- GALERIE PUBLIQUE accueil -->
+    <div id="galerie-accueil-section"></div>
+
+    <!-- LIVE BANNER accueil -->
+    <div id="live-home-banner"></div>
 
     <div class="card" style="display:flex;flex-direction:column;gap:12px">
 
@@ -844,6 +905,15 @@ document.getElementById('confirm-modal').addEventListener('click', e => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Événements
         </button>
+        <button class="nav-btn" id="nav-galerie" onclick="adminPage('galerie')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Galerie
+        </button>
+        <button class="nav-btn" id="nav-live" onclick="adminPage('live')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          Live
+          <span id="badge-live" style="display:none;background:#e53030;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:auto;box-shadow:0 2px 8px rgba(229,48,48,.4);animation:pulse 2s infinite">●</span>
+        </button>
       </nav>
       <button class="logout-btn" onclick="adminLogout()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -998,8 +1068,16 @@ function showToast(msg, type='success') {
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape') {
     closeEventModal();
-    // Fermer pay modal aussi
     document.querySelectorAll('.pay-modal.open').forEach(m => m.classList.remove('open'));
+    // Fermer lightbox galerie
+    const lb = document.getElementById('galerie-lightbox');
+    if(lb && lb.classList.contains('open')) { galerieCloseLightbox(); return; }
+  }
+  // Navigation lightbox
+  const lb = document.getElementById('galerie-lightbox');
+  if(lb && lb.classList.contains('open')) {
+    if(e.key==='ArrowLeft') galerieLbPrev();
+    if(e.key==='ArrowRight') galerieLbNext();
   }
 });
 document.getElementById('event-modal')?.addEventListener('click', e => {
@@ -1013,6 +1091,7 @@ let db = {
   members: [],
   cotisations: [],
   eventCotisations: [],
+  galerie: [],
   events: [
     {
       id: 1,
@@ -1134,6 +1213,7 @@ function loadLocal() {
     db.pending          = d.pending          || [];
     db.cotisations      = d.cotisations      || [];
     db.eventCotisations = d.eventCotisations || [];
+    db.galerie          = d.galerie          || [];
     if (d.events && d.events.length > 0) db.events = d.events;
     // Recharger les photos locales
     try {
@@ -1196,7 +1276,9 @@ async function chargerPhotos() {
 function dbPourSupabase() {
   const membres  = db.members.map(m  => ({ ...m,  photo: undefined }));
   const pending  = db.pending.map(p  => ({ ...p,  photo: undefined }));
-  return { ...db, members: membres, pending: pending };
+  // Exclure les data base64 des médias pour Supabase (trop lourd) — stocker méta seulement
+  const galerie  = (db.galerie||[]).map(m => ({ ...m, data: m.data&&m.data.length<200000 ? m.data : '__large__' }));
+  return { ...db, members: membres, pending: pending, galerie };
 }
 
 // ── Sauvegarder vers Supabase + local
@@ -1311,6 +1393,7 @@ function importerBackupJSON() {
         db.pending = data.pending || [];
         db.cotisations = data.cotisations || [];
         db.eventCotisations = data.eventCotisations || [];
+        db.galerie = data.galerie || [];
         if (data.events && data.events.length > 0) db.events = data.events;
         await saveDB();
         showToast(`✅ ${db.members.length} membres restaurés !`, 'success');
@@ -1339,6 +1422,7 @@ async function loadDB() {
         if (Array.isArray(parsed.pending)) db.pending = parsed.pending;
         if (Array.isArray(parsed.cotisations) && parsed.cotisations.length) db.cotisations = parsed.cotisations;
         if (Array.isArray(parsed.eventCotisations)) db.eventCotisations = parsed.eventCotisations;
+        if (Array.isArray(parsed.galerie)) db.galerie = parsed.galerie;
         if (Array.isArray(parsed.events) && parsed.events.length) db.events = parsed.events;
         // Charger les photos depuis la table séparée
         await chargerPhotos();
@@ -1398,6 +1482,11 @@ function renderAfterLoad() {
     if (added > 0) saveDB();
   }
   document.querySelectorAll('img[id^="logo"]').forEach(img => img.src = LOGO_SRC);
+  // Render galerie publique sur la page d'accueil
+  const galerieAccueil = document.getElementById('galerie-accueil-section');
+  if(galerieAccueil && (db.galerie||[]).length>0) {
+    galerieAccueil.innerHTML = galeriePubliqueHTML(9);
+  }
 }
 
 // ── Lancement : charger depuis Supabase
@@ -1460,7 +1549,9 @@ async function checkForUpdates() {
       if (parsed.members !== undefined)         db.members         = parsed.members;
       if (parsed.cotisations !== undefined)     db.cotisations     = parsed.cotisations;
       if (parsed.eventCotisations !== undefined) db.eventCotisations = parsed.eventCotisations;
+      if (parsed.galerie !== undefined)         db.galerie         = parsed.galerie;
       if (parsed.events && parsed.events.length > 0) db.events    = parsed.events;
+      if (parsed.live !== undefined)            db.live            = parsed.live;
 
       // Recharger les photos depuis daara_photos (elles ne sont pas dans daara_db)
       await chargerPhotos();
@@ -1543,6 +1634,22 @@ document.addEventListener('visibilitychange', () => {
 // Démarrer dès le chargement
 setTimeout(startPolling, 3000); // Attendre que loadDB() soit terminé
 
+// ─── Gestion du hash #live dans l'URL (lien partagé)
+(function() {
+  function checkHash() {
+    if (window.location.hash === '#live') {
+      renderHomeLiveBanner();
+      showPage('live');
+    } else {
+      renderHomeLiveBanner();
+    }
+  }
+  // Au chargement
+  setTimeout(checkHash, 500);
+  // Si le hash change dynamiquement
+  window.addEventListener('hashchange', checkHash);
+})();
+
 // ═══════════════════ LOGO (chargé aussi dans renderAfterLoad)
 document.querySelectorAll('img[id^="logo"]').forEach(img => img.src = LOGO_SRC);
 
@@ -1561,6 +1668,9 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   window.scrollTo(0, 0);
+  // Rendu dynamique selon la page
+  if (id === 'live') renderLivePublicPage();
+  if (id === 'home') { renderHomeLiveBanner(); }
 }
 
 // ═══════════════════ PHOTO PREVIEW
@@ -2757,6 +2867,33 @@ function exportFicheMembre(memberId) {
 
     <div class="footer">Document généré le ${new Date().toLocaleDateString('fr-FR')} · DAA'RA SAHADATOU TOULAB TOUBA ENDSS</div>
   </div>
+
+<!-- ═══════════════════════════════════════════════ MODAL CATÉGORIE GALERIE -->
+<div id="galerie-cat-modal-global" style="display:none;position:fixed;inset:0;background:rgba(30,26,20,.6);align-items:center;justify-content:center;z-index:10050;padding:20px;backdrop-filter:blur(6px)">
+  <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:26px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.12)">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);margin-bottom:6px">📂 Catégorie</h3>
+    <p id="galerie-cat-fn" style="font-size:12px;color:var(--muted);margin-bottom:16px;word-break:break-all"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="galerieSetCat('Général')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Général</button>
+      <button onclick="galerieSetCat('Événements')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Événements</button>
+      <button onclick="galerieSetCat('Couverture Médicale')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Couverture Méd.</button>
+      <button onclick="galerieSetCat('Don de Sang')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Don de Sang</button>
+      <button onclick="galerieSetCat('Ndogou')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Ndogou</button>
+      <button onclick="galerieSetCat('Magal')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Magal</button>
+      <button onclick="galerieSetCat('Ziar')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Ziar</button>
+      <button onclick="galerieSetCat('Safar')" style="padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--s2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Safar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ LIGHTBOX GALERIE -->
+<div id="galerie-lightbox" class="lightbox" onclick="if(event.target===this)galerieCloseLightbox()">
+  <button class="lightbox-close" onclick="galerieCloseLightbox()">✕</button>
+  <button class="lightbox-nav lightbox-prev" id="lb-prev" onclick="galerieLbPrev()">‹</button>
+  <div id="lb-content" class="lightbox-content"></div>
+  <p id="lb-caption" class="lightbox-caption"></p>
+  <button class="lightbox-nav lightbox-next" id="lb-next" onclick="galerieLbNext()">›</button>
+</div>
 </body>
 </html>`;
 
@@ -3274,6 +3411,54 @@ function adminPage(page) {
           </div>`;
           }).join('')}
       </div>`;
+  }
+  else if(page==='galerie') {
+    const cats = ['Général','Événements','Couverture Médicale','Don de Sang','Ndogou','Magal','Ziar','Safar'];
+    const gal = db.galerie || [];
+    const photos = gal.filter(m=>m.type==='image').length;
+    const videos = gal.filter(m=>m.type==='video').length;
+    const pdfs   = gal.filter(m=>m.type==='pdf').length;
+    main.innerHTML = `
+      <div class="fi">
+        <div class="admin-header">
+          <div>
+            <div class="page-title">Galerie Médias</div>
+            <div class="page-sub">${gal.length} média${gal.length!==1?'s':''} · photos, vidéos, documents</div>
+          </div>
+        </div>
+        <div class="galerie-upload-zone" onclick="document.getElementById('galerie-input').click()">
+          <div style="font-size:36px;margin-bottom:10px">📁</div>
+          <p style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold);margin-bottom:6px">Ajouter des médias</p>
+          <p style="font-size:13px;color:var(--muted)">Photos (JPG, PNG, WEBP) · Vidéos (MP4, MOV) · Documents PDF</p>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px">Cliquez pour sélectionner vos fichiers</p>
+        </div>
+        <input type="file" id="galerie-input" accept="image/*,video/*,.pdf" multiple style="display:none" onchange="galerieAjouter(this)"/>
+        <div class="galerie-filter-tabs" style="margin-top:20px">
+          <button class="galerie-tab active" onclick="galerieFilter('all',this)">Tout (${gal.length})</button>
+          <button class="galerie-tab" onclick="galerieFilter('image',this)">📷 Photos (${photos})</button>
+          <button class="galerie-tab" onclick="galerieFilter('video',this)">🎬 Vidéos (${videos})</button>
+          <button class="galerie-tab" onclick="galerieFilter('pdf',this)">📄 Documents (${pdfs})</button>
+        </div>
+        <div class="galerie-grid" id="galerie-admin-grid">
+          ${gal.length===0
+            ? '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aucun média — commencez par en ajouter !</div>'
+            : galerieRenderItems(gal, true)}
+        </div>
+      </div>`;
+    setTimeout(()=>{
+      const zone = document.querySelector('.galerie-upload-zone');
+      if(!zone) return;
+      zone.ondragover = e=>{e.preventDefault();zone.style.borderColor='var(--gold)';zone.style.background='var(--gold2)15';};
+      zone.ondragleave = ()=>{zone.style.borderColor='';zone.style.background='';};
+      zone.ondrop = e=>{
+        e.preventDefault();zone.style.borderColor='';zone.style.background='';
+        const inp=document.getElementById('galerie-input');
+        if(inp){const dt=new DataTransfer();[...e.dataTransfer.files].forEach(f=>dt.items.add(f));inp.files=dt.files;galerieAjouter(inp);}
+      };
+    },100);
+  }
+  else if(page==='live') {
+    main.innerHTML = `<div class="fi">${adminRenderLive()}</div>`;
   }
 }
 </script>
@@ -3949,6 +4134,16 @@ function renderMemberContent() {
       ` : '<p style="text-align:center;color:var(--muted);font-size:13px;padding:10px 0">Aucune cotisation enregistrée</p>'}
     </div>
 
+    <!-- ═══ SECTION 2.5 : GALERIE ═══ -->
+    ${(db.galerie||[]).length>0 ? `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <p style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap">📸 Galerie</p>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    ${galeriePubliqueHTML(6)}
+    ` : ''}
+
     <!-- ═══ SECTION 3 : ÉVÉNEMENTS ═══ -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
       <div style="flex:1;height:1px;background:var(--border)"></div>
@@ -4105,6 +4300,410 @@ function imprimerCarte(memberId) {
     ${cartHtml}
   </body></html>`);
   win.document.close();
+}
+
+
+// ══════════════════════════════════════════════
+// MODULE GALERIE — Fonctions complètes
+// ══════════════════════════════════════════════
+
+// Catégories disponibles
+const GALERIE_CATS = ['Général','Événements','Couverture Médicale','Don de Sang','Ndogou','Magal','Ziar','Safar'];
+let _galerieCatQueue = []; // file de fichiers en attente de catégorisation
+let _galerieCatCurrent = null; // fichier en cours
+
+// ── Render items (admin=true → bouton suppr, admin=false → lecture seule)
+function galerieRenderItems(items, admin=false) {
+  if(!items || items.length===0) return '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aucun média</div>';
+  const catColors = {
+    'Général':'var(--muted)','Événements':'var(--blue2)','Couverture Médicale':'var(--teal)',
+    'Don de Sang':'var(--red)','Ndogou':'var(--gold)','Magal':'var(--violet2)',
+    'Ziar':'var(--green)','Safar':'var(--gold2)'
+  };
+  return items.map((m,i)=>{
+    const catColor = catColors[m.categorie]||'var(--muted)';
+    if(m.type==='image') {
+      return `<div class="galerie-item" data-type="image" onclick="${admin?'':'galerieOpenLightbox('+i+',db.galerie)'}">
+        <img src="${m.data}" alt="${m.nom||''}" loading="lazy"/>
+        <div class="galerie-type-badge">📷</div>
+        <div class="galerie-cat" style="background:${catColor}22;color:${catColor}">${m.categorie||'Général'}</div>
+        <div class="galerie-overlay">
+          <p style="color:#fff;font-size:12px;font-weight:600;margin-bottom:6px">${m.nom||'Photo'}</p>
+          ${admin?`<div class="galerie-actions"><button class="galerie-btn-del" onclick="event.stopPropagation();galerieSupprimer(${i})">🗑 Supprimer</button></div>`:''}
+        </div>
+      </div>`;
+    } else if(m.type==='video') {
+      return `<div class="galerie-item" data-type="video" onclick="${admin?'':'galerieOpenLightbox('+i+',db.galerie)'}">
+        <video src="${m.data}" preload="none" style="pointer-events:none"></video>
+        <div class="galerie-play-icon"><span style="font-size:32px">▶️</span></div>
+        <div class="galerie-type-badge">🎬</div>
+        <div class="galerie-cat" style="background:${catColor}22;color:${catColor}">${m.categorie||'Général'}</div>
+        <div class="galerie-overlay">
+          <p style="color:#fff;font-size:12px;font-weight:600;margin-bottom:6px">${m.nom||'Vidéo'}</p>
+          ${admin?`<div class="galerie-actions"><button class="galerie-btn-del" onclick="event.stopPropagation();galerieSupprimer(${i})">🗑 Supprimer</button></div>`:''}
+        </div>
+      </div>`;
+    } else {
+      return `<div class="galerie-pub-pdf" onclick="${admin?'':'window.open(m.data)'}" data-type="pdf" style="cursor:pointer">
+        <div style="font-size:36px">📄</div>
+        <div style="font-size:11px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${m.nom||'Document'}</div>
+        <div style="font-size:10px;color:${catColor}">${m.categorie||'Général'}</div>
+        ${admin?`<button class="galerie-btn-del" style="margin-top:4px" onclick="event.stopPropagation();galerieSupprimer(${i})">🗑</button>`:''}
+      </div>`;
+    }
+  }).join('');
+}
+
+// ── Filtrer la grille admin
+function galerieFilter(type, btn) {
+  document.querySelectorAll('.galerie-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const grid = document.getElementById('galerie-admin-grid');
+  if(!grid) return;
+  const items = type==='all' ? (db.galerie||[]) : (db.galerie||[]).filter(m=>m.type===type);
+  grid.innerHTML = galerieRenderItems(items, true);
+}
+
+// ── Ajouter des médias (avec demande de catégorie)
+function galerieAjouter(input) {
+  if(!isAdmin()) return;
+  const files = [...input.files];
+  if(!files.length) return;
+  _galerieCatQueue = files;
+  _galerieCatCurrent = null;
+  galerieProcessQueue();
+  input.value = '';
+}
+
+function galerieProcessQueue() {
+  if(_galerieCatQueue.length===0) {
+    saveDB();
+    showToast(`✓ Médias ajoutés à la galerie`, 'success');
+    adminPage('galerie');
+    return;
+  }
+  const file = _galerieCatQueue.shift();
+  _galerieCatCurrent = file;
+  // Afficher modal catégorie
+  galerieShowCatModal(file.name, (cat)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      let type = 'image';
+      if(file.type.startsWith('video')) type='video';
+      else if(file.type==='application/pdf') type='pdf';
+      if(!db.galerie) db.galerie=[];
+      db.galerie.push({
+        id: Date.now()+'_'+Math.random().toString(36).slice(2),
+        nom: file.name,
+        type,
+        categorie: cat,
+        data: e.target.result,
+        dateAjout: new Date().toISOString().slice(0,10)
+      });
+      galerieProcessQueue();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+let _galeirieCatCallback = null;
+function galerieShowCatModal(filename, cb) {
+  _galeirieCatCallback = cb;
+  const modal = document.getElementById('galerie-cat-modal-global');
+  if(!modal) { cb('Général'); return; }
+  document.getElementById('galerie-cat-fn').textContent = filename;
+  modal.style.display='flex';
+}
+function galerieSetCat(cat) {
+  const modal = document.getElementById('galerie-cat-modal-global');
+  if(modal) modal.style.display='none';
+  if(_galeirieCatCallback) { _galeirieCatCallback(cat); _galeirieCatCallback=null; }
+}
+
+// ── Supprimer un média
+function galerieSupprimer(idx) {
+  if(!isAdmin()) return;
+  askConfirm('Supprimer', 'Supprimer ce média définitivement ?', ()=>{
+    if(!db.galerie||idx<0||idx>=db.galerie.length) return;
+    db.galerie.splice(idx,1);
+    saveDB();
+    showToast('Média supprimé', 'error');
+    adminPage('galerie');
+  });
+}
+
+// ── Lightbox
+let _lbItems=[], _lbIdx=0;
+function galerieOpenLightbox(idx, items) {
+  _lbItems = items||[];
+  _lbIdx = idx;
+  galerieRenderLightbox();
+  const lb = document.getElementById('galerie-lightbox');
+  if(lb) lb.classList.add('open');
+}
+function galerieRenderLightbox() {
+  const m = _lbItems[_lbIdx];
+  if(!m) return;
+  const box = document.getElementById('lb-content');
+  const cap = document.getElementById('lb-caption');
+  const prev = document.getElementById('lb-prev');
+  const next = document.getElementById('lb-next');
+  if(!box) return;
+  if(m.type==='image') {
+    box.innerHTML=`<img src="${m.data}" alt="${m.nom||''}"/>`;
+  } else if(m.type==='video') {
+    box.innerHTML=`<video src="${m.data}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:10px"></video>`;
+  } else {
+    box.innerHTML=`<div style="background:#fff;padding:20px;border-radius:10px;font-size:16px;color:#333">📄 ${m.nom||'Document PDF'}<br><br><a href="${m.data}" target="_blank" style="color:var(--gold);font-weight:700">Ouvrir le document →</a></div>`;
+  }
+  if(cap) cap.textContent = (m.categorie||'') + (m.nom?' · '+m.nom:'');
+  if(prev) prev.style.display=_lbIdx>0?'flex':'none';
+  if(next) next.style.display=_lbIdx<_lbItems.length-1?'flex':'none';
+}
+function galerieLbPrev() { if(_lbIdx>0){_lbIdx--;galerieRenderLightbox();} }
+function galerieLbNext() { if(_lbIdx<_lbItems.length-1){_lbIdx++;galerieRenderLightbox();} }
+function galerieCloseLightbox() {
+  const lb = document.getElementById('galerie-lightbox');
+  if(lb) lb.classList.remove('open');
+  const box = document.getElementById('lb-content');
+  if(box) box.innerHTML='';
+}
+// keydown galerie géré dans le listener principal
+
+// ═══════════════════════════════════════════════════════
+// ══════════════════ LIVE / DIFFUSION EN DIRECT ══════════
+// ═══════════════════════════════════════════════════════
+
+// Structure dans db.live : { actif: bool, lien: string, titre: string, description: string }
+
+function liveGetData() {
+  if (!db.live) db.live = { actif: false, lien: '', titre: '', description: '' };
+  return db.live;
+}
+
+// ── Extraire l'embed iframe depuis un lien Facebook ou YouTube
+function liveGetEmbedHTML(lien) {
+  if (!lien) return '';
+  lien = lien.trim();
+  // YouTube : youtu.be/ID ou youtube.com/watch?v=ID ou youtube.com/live/ID
+  let ytMatch = lien.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|live\/|embed\/))([A-Za-z0-9_-]{10,12})/);
+  if (ytMatch) {
+    return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}?autoplay=0&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px;border:none;"></iframe>`;
+  }
+  // YouTube live direct embed URL
+  if (lien.includes('youtube.com/embed/')) {
+    return `<iframe src="${lien}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px;border:none;"></iframe>`;
+  }
+  // Facebook Live/Video
+  if (lien.includes('facebook.com') || lien.includes('fb.watch')) {
+    const encoded = encodeURIComponent(lien);
+    return `<iframe src="https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&width=560&mute=0" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" style="width:100%;aspect-ratio:16/9;border-radius:12px;border:none;"></iframe>`;
+  }
+  // Lien générique — afficher bouton direct
+  return `<a href="${lien}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;color:#fff;text-decoration:none;font-weight:700;font-size:15px">
+    <span style="font-size:28px">📺</span> Regarder le direct
+  </a>`;
+}
+
+// ── Rendu admin — onglet Live
+function adminRenderLive() {
+  const live = liveGetData();
+  const badge = document.getElementById('badge-live');
+  if (badge) badge.style.display = live.actif ? 'inline' : 'none';
+
+  return `
+  <div class="admin-header">
+    <div>
+      <h2 class="page-title">📡 Live — Diffusion en direct</h2>
+      <p class="page-sub">Activez et configurez le lien de diffusion visible par tous les visiteurs du site</p>
+    </div>
+  </div>
+
+  <div style="max-width:580px">
+    <!-- Statut actuel -->
+    <div style="background:${live.actif ? 'rgba(229,48,48,.08)' : 'var(--s2)'};border:2px solid ${live.actif ? 'rgba(229,48,48,.3)' : 'var(--border)'};border-radius:var(--r);padding:20px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px">
+      <div style="width:48px;height:48px;border-radius:50%;background:${live.actif ? 'rgba(229,48,48,.15)' : 'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+        ${live.actif ? '🔴' : '⚫'}
+      </div>
+      <div style="flex:1">
+        <p style="font-size:15px;font-weight:700;color:${live.actif ? '#e53030' : 'var(--muted)'}">${live.actif ? 'LIVE EN COURS' : 'Aucun live actif'}</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:2px">${live.actif ? (live.titre || 'Diffusion en direct') : 'Activez le live pour que les visiteurs puissent regarder'}</p>
+      </div>
+      <button onclick="liveToggle()" style="background:${live.actif ? 'rgba(229,48,48,.12)' : 'rgba(26,158,132,.12)'};border:1.5px solid ${live.actif ? 'rgba(229,48,48,.3)' : 'rgba(26,158,132,.3)'};color:${live.actif ? '#e53030' : 'var(--teal)'};border-radius:10px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s" onmouseenter="this.style.opacity='.8'" onmouseleave="this.style.opacity='1'">
+        ${live.actif ? '⏹ Arrêter' : '▶ Démarrer'}
+      </button>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="card" style="margin-bottom:16px">
+      <p style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px">⚙️ Configuration</p>
+
+      <div class="field">
+        <label>Titre du live *</label>
+        <input type="text" id="live-titre" value="${(live.titre||'').replace(/"/g,'&quot;')}" placeholder="Ex: Dahira d'Intégration 2025 — Cérémonie officielle" maxlength="120"/>
+      </div>
+      <div class="field">
+        <label>Lien de diffusion *</label>
+        <input type="url" id="live-lien" value="${(live.lien||'').replace(/"/g,'&quot;')}" placeholder="https://www.facebook.com/... ou https://youtu.be/..." style="font-size:13px"/>
+        <p style="font-size:11px;color:var(--muted);margin-top:5px">✅ Accepte les liens Facebook Live et YouTube Live</p>
+      </div>
+      <div class="field">
+        <label>Message pour les visiteurs (optionnel)</label>
+        <textarea id="live-desc" rows="2" style="resize:vertical" placeholder="Ex: Suivez en direct notre Dahira d'Intégration…">${live.description||''}</textarea>
+      </div>
+      <button onclick="liveSauvegarder()" class="btn btn-primary" style="margin-top:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Enregistrer
+      </button>
+    </div>
+
+    <!-- Prévisualisation -->
+    ${live.lien ? `
+    <div class="card">
+      <p style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">👁 Prévisualisation</p>
+      ${liveGetEmbedHTML(live.lien)}
+      <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">Voilà ce que verront les visiteurs sur le site public</p>
+    </div>` : `
+    <div class="card" style="text-align:center;padding:30px">
+      <p style="font-size:28px;margin-bottom:10px">📡</p>
+      <p style="font-size:13px;color:var(--muted)">Entrez un lien pour voir la prévisualisation</p>
+    </div>`}
+
+    <!-- Lien à partager -->
+    <div style="background:rgba(26,158,132,.06);border:1px solid rgba(26,158,132,.2);border-radius:12px;padding:16px;margin-top:16px">
+      <p style="font-size:11px;color:var(--teal);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">🔗 Lien à partager</p>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:8px;padding:10px 12px;border:1px solid var(--border)">
+        <span id="live-share-url" style="font-size:12px;color:var(--text);flex:1;word-break:break-all;font-family:monospace">${window.location.href.split('#')[0]}#live</span>
+        <button onclick="liveCopierLien()" style="background:var(--gold);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:opacity .15s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">Copier</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">Partagez ce lien dans les groupes WhatsApp — les visiteurs verront le live directement sans compte</p>
+    </div>
+  </div>`;
+}
+
+function liveSauvegarder() {
+  const titre = document.getElementById('live-titre').value.trim();
+  const lien = document.getElementById('live-lien').value.trim();
+  const desc = document.getElementById('live-desc').value.trim();
+  if (!titre) { showToast('⚠️ Entrez un titre', 'error'); return; }
+  if (!lien) { showToast('⚠️ Entrez un lien de diffusion', 'error'); return; }
+  db.live = { ...liveGetData(), titre, lien, description: desc };
+  saveDB();
+  showToast('✓ Live configuré', 'success');
+  adminPage('live');
+}
+
+function liveToggle() {
+  const live = liveGetData();
+  if (!live.lien && !live.actif) {
+    showToast('⚠️ Configurez d\'abord un lien de diffusion', 'error');
+    return;
+  }
+  db.live = { ...live, actif: !live.actif };
+  saveDB();
+  const msg = db.live.actif ? '🔴 Live démarré — visible par tous les visiteurs' : '⏹ Live arrêté';
+  showToast(msg, db.live.actif ? 'success' : 'error');
+  adminPage('live');
+  renderHomeLiveBanner();
+}
+
+function liveCopierLien() {
+  const url = window.location.href.split('#')[0] + '#live';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('✓ Lien copié !', 'success'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Lien copié !', 'success');
+  }
+}
+
+// ── Bannière Live sur la page d'accueil
+function renderHomeLiveBanner() {
+  const banner = document.getElementById('live-home-banner');
+  if (!banner) return;
+  const live = liveGetData();
+  if (!live.actif || !live.lien) {
+    banner.innerHTML = '';
+    return;
+  }
+  banner.innerHTML = `
+  <div onclick="showPage('live')" style="cursor:pointer;background:linear-gradient(135deg,#1a0505,#2d0808);border:2px solid rgba(229,48,48,.4);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;animation:fadeIn .4s ease;box-shadow:0 4px 20px rgba(229,48,48,.2)" onmouseenter="this.style.borderColor='rgba(229,48,48,.7)'" onmouseleave="this.style.borderColor='rgba(229,48,48,.4)'">
+    <div style="position:relative;flex-shrink:0">
+      <div style="width:48px;height:48px;border-radius:50%;background:rgba(229,48,48,.2);border:2px solid rgba(229,48,48,.5);display:flex;align-items:center;justify-content:center;font-size:20px">📡</div>
+      <div style="position:absolute;top:0;right:0;width:14px;height:14px;background:#e53030;border-radius:50%;border:2px solid #1a0505;animation:pulse 1.5s infinite"></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <p style="font-size:11px;color:#e53030;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">🔴 EN DIRECT MAINTENANT</p>
+      <p style="font-size:14px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${live.titre||'Diffusion en direct'}</p>
+      ${live.description ? `<p style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${live.description}</p>` : ''}
+    </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>`;
+}
+
+// ── Contenu de la page Live publique
+function renderLivePublicPage() {
+  const content = document.getElementById('live-public-content');
+  const logo = document.getElementById('logo-live');
+  if (!content) return;
+  // Charger le logo
+  if (logo) {
+    const logoSrc = db.config && db.config.logo ? db.config.logo : null;
+    if (logoSrc) logo.src = logoSrc;
+    else logo.style.display = 'none';
+  }
+  const live = liveGetData();
+  if (!live.actif || !live.lien) {
+    content.innerHTML = `
+    <div class="card" style="text-align:center;padding:40px 24px">
+      <div style="font-size:52px;margin-bottom:16px">📡</div>
+      <p style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);margin-bottom:10px">Aucun direct en cours</p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7">Il n'y a pas de diffusion en direct pour le moment.<br>Revenez bientôt ou suivez-nous sur nos réseaux sociaux.</p>
+      <button onclick="showPage('home')" class="btn btn-secondary" style="margin-top:24px;width:auto;padding:12px 24px">
+        ← Retour à l'accueil
+      </button>
+    </div>`;
+    return;
+  }
+  content.innerHTML = `
+  <div style="margin-bottom:16px">
+    ${live.description ? `<p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;padding:12px 16px;background:var(--s2);border-radius:10px;border-left:3px solid var(--teal)">${live.description}</p>` : ''}
+    <div style="background:#000;border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+      ${liveGetEmbedHTML(live.lien)}
+    </div>
+  </div>
+  <div style="background:rgba(229,48,48,.06);border:1px solid rgba(229,48,48,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <div style="width:10px;height:10px;background:#e53030;border-radius:50%;animation:pulse 1.5s infinite;flex-shrink:0"></div>
+    <p style="font-size:13px;color:#e53030;font-weight:700">DIFFUSION EN DIRECT</p>
+    <p style="font-size:12px;color:var(--muted);margin-left:auto">Actualisez si le video ne charge pas</p>
+  </div>
+  <div style="background:var(--s2);border-radius:12px;padding:14px 16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7">
+    🔗 Partagez ce lien avec vos proches :<br>
+    <span style="font-family:monospace;color:var(--gold);font-size:11px;word-break:break-all">${window.location.href.split('#')[0]}#live</span>
+  </div>`;
+}
+
+// ── HTML de la galerie publique (accueil + espace membre)
+function galeriePubliqueHTML(limit=8) {
+  const gal = (db.galerie||[]).slice(0,limit);
+  if(gal.length===0) return '';
+  return `
+  <div class="card" style="margin-bottom:16px">
+    <p style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">📸 Galerie</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">${(db.galerie||[]).length} média${(db.galerie||[]).length!==1?'s':''}${limit<(db.galerie||[]).length?' · cliquez pour voir plus':''}</p>
+    <div class="galerie-pub-grid">
+      ${gal.map((m,i)=>{
+        if(m.type==='image') return `<div class="galerie-pub-item" onclick="galerieOpenLightbox(${i},db.galerie.slice(0,${limit}))"><img src="${m.data}" alt="${m.nom||''}" loading="lazy"/></div>`;
+        if(m.type==='video') return `<div class="galerie-pub-item" onclick="galerieOpenLightbox(${i},db.galerie.slice(0,${limit}))"><video src="${m.data}" preload="none" style="pointer-events:none;width:100%;height:100%;object-fit:cover"></video><div class="galerie-play-icon"><span style="font-size:24px">▶️</span></div></div>`;
+        return `<div class="galerie-pub-pdf" onclick="window.open('${m.data}')"><div style="font-size:28px">📄</div><div style="font-size:10px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px">${m.nom||'PDF'}</div></div>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 
 </script>
